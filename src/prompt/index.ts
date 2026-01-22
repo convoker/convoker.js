@@ -1,7 +1,11 @@
+import childProcess from "node:child_process";
+import fs from "node:fs/promises";
+import path from "node:path";
+import os from "node:os";
+
 import { DEFAULT_THEME, type Theme } from "@/color";
 import { validate, type StandardSchemaV1 } from "@/standard-schema";
 import { InputValidationError } from "@/error";
-import { isDeno, isNode, isBun } from "@/utils";
 import * as raw from "./raw";
 
 let theme: Theme = DEFAULT_THEME;
@@ -291,14 +295,20 @@ export async function search<T>(opts: SearchOpts<T>): Promise<T> {
   while (true) {
     raw.clearLines();
     console.log(th.primary(opts.message));
+
     const matches = opts.options.filter((o) => filter(query, o));
     matches.forEach((o) =>
       console.log("  " + (th.foreground?.(o.label) ?? o.label)),
     );
+
+    if (matches.length === 1) {
+      return matches[0].value;
+    }
+
     const input = await raw.readLine(th.secondary(`Search: ${query}`));
-    if (input === "") continue;
+    if (!input) continue;
+
     query = input;
-    if (matches.length === 1) return matches[0].value;
   }
 }
 
@@ -388,73 +398,30 @@ export async function editor(opts: EditorOpts): Promise<string> {
  */
 async function openSystemEditor(initial: string): Promise<string> {
   const tmpFile = `edit-${Date.now()}.txt`;
+  const filePath = path.join(os.tmpdir(), tmpFile);
+  await fs.writeFile(filePath, initial ?? "", "utf8");
 
-  if (isDeno) {
-    const tmpDir = Deno.env.get("TMPDIR") ?? "/tmp";
-    const path = `${tmpDir}/${tmpFile}`;
-    await Deno.writeTextFile(path, initial ?? "");
+  const editor =
+    process.env.EDITOR ||
+    process.env.VISUAL ||
+    (process.platform === "win32" ? "notepad" : "vi");
 
-    const editor = Deno.env.get("EDITOR") ?? "vi";
-    const p = new Deno.Command(editor, {
-      args: [path],
-      stdin: "inherit",
-      stdout: "inherit",
-      stderr: "inherit",
-    }).spawn();
-
-    const status = await p.status;
-    if (!status.success)
-      throw new Error(`${editor} exited with ${status.code}`);
-
-    const text = await Deno.readTextFile(path);
-    await Deno.remove(path).catch(() => {});
-    return text;
-  }
-
-  if (isBun) {
-    const { $ } = await import("bun");
-    const path = `/tmp/${tmpFile}`;
-    await Bun.write(path, initial ?? "");
-    const editor = process.env.EDITOR ?? "vi";
-    await $`${editor} ${path}`;
-    const text = await Bun.file(path).text();
-    await Bun.write(path, ""); // or remove if supported
-    return text;
-  }
-
-  if (isNode) {
-    const { tmpdir } = await import("node:os");
-    const { join } = await import("node:path");
-    const { promises: fs } = await import("node:fs");
-    const { spawn } = await import("node:child_process");
-
-    const path = join(tmpdir(), tmpFile);
-    await fs.writeFile(path, initial ?? "", "utf8");
-
-    const editor =
-      process.env.EDITOR ||
-      process.env.VISUAL ||
-      (process.platform === "win32" ? "notepad" : "vi");
-
-    return new Promise((resolve, reject) => {
-      const child = spawn(editor, [path], { stdio: "inherit" });
-      child.on("exit", async (code: number) => {
-        if (code !== 0) {
-          reject(new Error(`${editor} exited with code ${code}`));
-          return;
-        }
-        try {
-          const data = await fs.readFile(path, "utf8");
-          await fs.unlink(path).catch(() => {});
-          resolve(data);
-        } catch (err) {
-          reject(err);
-        }
-      });
+  return new Promise((resolve, reject) => {
+    const child = childProcess.spawn(editor, [filePath], { stdio: "inherit" });
+    child.on("exit", async (code: number) => {
+      if (code !== 0) {
+        reject(new Error(`${editor} exited with code ${code}`));
+        return;
+      }
+      try {
+        const data = await fs.readFile(filePath, "utf8");
+        await fs.unlink(filePath).catch(() => {});
+        resolve(data);
+      } catch (err) {
+        reject(err);
+      }
     });
-  }
-
-  throw new Error("Unsupported runtime for system editor.");
+  });
 }
 
 export { raw };

@@ -14,7 +14,9 @@ const mockCreateInterface = vi.fn(() => mockInterface);
 
 // static hoisted mock — Vitest requirement
 vi.mock("node:readline", () => ({
-  createInterface: mockCreateInterface,
+  default: {
+    createInterface: mockCreateInterface,
+  },
 }));
 
 // -----------------------------------------------------------------
@@ -99,7 +101,7 @@ describe("cursor and clear functions", () => {
 
   beforeEach(() => {
     if (!process.stdout) {
-      process.stdout = { write: () => true };
+      process.stdout = { write: () => true } as any;
     }
     writeSpy = vi.spyOn(process.stdout, "write").mockImplementation(() => true);
   });

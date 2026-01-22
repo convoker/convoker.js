@@ -1,24 +1,4 @@
 /**
- * If the runtime is Node.js.
- */
-export const isNode =
-  typeof process !== "undefined" &&
-  process.versions != null &&
-  process.versions.node != null;
-
-/**
- * If the runtime is Deno.
- */
-export const isDeno =
-  typeof Deno !== "undefined" && typeof Deno.version?.deno === "string";
-
-/**
- * If the runtime is Bun.
- */
-export const isBun =
-  typeof Bun !== "undefined" && typeof Bun.version === "string";
-
-/**
  * All TypeScript primitive types.
  */
 type Primitive = string | number | boolean | symbol | null | undefined | bigint;

@@ -1,6 +1,7 @@
+import process from "node:process";
+
 import { gray, cyan, bold, type Theme } from "./color";
 import { setTheme as setPromptTheme } from "./prompt";
-import { setTheme as setLogTheme } from "./log";
 import {
   ConvokerError,
   HelpAskedError,
@@ -394,7 +395,6 @@ export class Command<T extends Input = Input> {
           command = command.$children.get(arg)!.command;
           if (command.$theme) {
             setPromptTheme(command.$theme);
-            setLogTheme(command.$theme);
           }
         } else {
           found = true;
@@ -645,16 +645,7 @@ export class Command<T extends Input = Input> {
    * @returns this
    */
   async run(argv?: string[]): Promise<this> {
-    if (!argv) {
-      argv =
-        typeof Bun !== "undefined"
-          ? (Bun.argv.slice(2) as string[])
-          : typeof Deno !== "undefined"
-            ? (Deno.args as string[])
-            : (process.argv.slice(2) as string[]);
-    }
-
-    const result = await this.parse(argv);
+    const result = await this.parse(argv ?? process.argv.slice(2));
     if (result.isHelp) {
       result.command.handleErrors([new HelpAskedError(result.command)]);
       return this;

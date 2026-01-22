@@ -1,4 +1,4 @@
-import { isDeno } from "@/utils";
+import readline from "node:readline";
 
 /**
  * Reads a line from standard input.
@@ -7,32 +7,11 @@ import { isDeno } from "@/utils";
  * @param opts Options for reading a line.
  * @returns The line that was read.
  */
-export async function readLine(
+export function readLine(
   message = "",
   def?: string,
   opts?: { masked?: boolean; maskChar?: string; multiline?: boolean },
 ): Promise<string> {
-  // Deno
-  if (isDeno) {
-    await Deno.stdout.write(new TextEncoder().encode(message));
-    const decoder = new TextDecoder();
-    const buf = new Uint8Array(1024);
-    let input = "";
-    while (true) {
-      const n = await Deno.stdin.read(buf);
-      if (!n) break;
-      const chunk = decoder.decode(buf.subarray(0, n));
-      if (chunk.includes("\n")) {
-        input += chunk.split("\n")[0];
-        break;
-      }
-      input += chunk;
-    }
-    return input.trim() || def || "";
-  }
-
-  // Node / Bun
-  const readline = await import("node:readline");
   return new Promise((resolve) => {
     const rl = readline.createInterface({
       input: process.stdin,
@@ -41,8 +20,8 @@ export async function readLine(
     });
 
     if (opts?.masked) {
-      const write = rl._writeToOutput.bind(rl);
-      rl._writeToOutput = (str: string) => {
+      const write = (rl as any)._writeToOutput.bind(rl);
+      (rl as any)._writeToOutput = (str: string) => {
         if (str.match(/^\x1b/)) return write(str);
         if (str.endsWith("\n") || str.endsWith("\r")) return write(str);
         const mask = opts.maskChar ?? "*";

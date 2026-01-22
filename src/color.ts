@@ -37,24 +37,13 @@ function detectColorSupport() {
     return false;
   }
 
-  // Deno detection
-  if (typeof Deno !== "undefined" && Deno.noColor !== undefined) {
-    return !Deno.noColor;
-  }
+  const term = env.TERM || "";
+  const colorterm = env.COLORTERM || "";
 
-  // Node.js or Bun detection
-  if (typeof process !== "undefined" && process.stdout) {
-    const term = env.TERM || "";
-    const colorterm = env.COLORTERM || "";
+  if (colorterm.length > 0) return true;
+  if (term === "dumb") return false;
 
-    if (colorterm.length > 0) return true;
-    if (term === "dumb") return false;
-
-    return /(color|ansi|cygwin|xterm|vt100)/i.test(term);
-  }
-
-  // Other runtimes/Node without TTY
-  return false;
+  return /(color|ansi|cygwin|xterm|vt100)/i.test(term);
 }
 
 /**

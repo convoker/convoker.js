@@ -1,5 +1,5 @@
 import { error } from "@/index";
-import { validate } from "../src/standard-schema";
+import { validate } from "@/standard-schema";
 import { describe, expect, test } from "vitest";
 import * as v from "valibot";
 

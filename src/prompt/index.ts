@@ -89,7 +89,7 @@ export async function text(opts: TextOpts): Promise<string> {
         "Validation function returned a falsy value",
       ]);
   } else if (opts.validate) {
-    validate(opts.validate, answer);
+    await validate(opts.validate, answer);
   }
   return answer;
 }

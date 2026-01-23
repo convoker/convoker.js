@@ -36,14 +36,14 @@ export function setConfig({
 
 export function trace(...msgs: any[]) {
   const str = format(msgs, "TRACE");
-  if (!config.stdout.write(th.secondary(str))) {
+  if (!config.stdout.write(str)) {
     throw new WriteError("stdout");
   }
 }
 
 export function info(...msgs: any[]) {
   const str = format(msgs, "INFO");
-  if (!config.stdout.write(th.info?.(str) ?? str)) {
+  if (!config.stdout.write(str)) {
     throw new WriteError("stdout");
   }
 }
@@ -83,13 +83,13 @@ function format(msgs: any[], level: string): string {
   switch (config.format) {
     case "json":
       return colorize(
-        JSON.stringify({ timestamp, message: msg }) + "\n",
+        JSON.stringify({ timestamp, level, message: msg }) + "\n",
         level,
       );
     case "text":
     default:
       return colorize(
-        `[${timestamp}] [${(th.symbols as any)[level] ?? level}]`,
+        `[${timestamp}] [${(th.symbols as any)[level] ?? level}] ${msg}\n`,
         level,
       );
   }
@@ -97,15 +97,15 @@ function format(msgs: any[], level: string): string {
 
 function colorize(str: string, level: string) {
   switch (level) {
-    case "trace":
+    case "TRACE":
       return th.secondary(str);
-    case "warn":
+    case "WARN":
       return th.warning(str);
-    case "error":
+    case "ERROR":
       return th.error(str);
-    case "fatal":
+    case "FATAL":
       return th.styles?.bold ? th.styles.bold(th.error(str)) : th.error(str);
-    case "info":
+    case "INFO":
     default:
       return th.info?.(str) ?? str;
   }

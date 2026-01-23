@@ -1,6 +1,6 @@
 {
   "name": "convoker",
-  "version": "0.3.5",
+  "version": "0.4.0",
   "description": "A simple, type safe CLI framework for TypeScript.",
   "repository": {
     "type": "git",
@@ -14,16 +14,16 @@
       "import": "./dist/index.mjs"
     },
     "./command": {
-      "types": "./dist/command.d.mts",
-      "import": "./dist/command.mjs"
+      "types": "./dist/command/index.d.mts",
+      "import": "./dist/command/index.mjs"
     },
     "./input": {
-      "types": "./dist/types.d.mts",
-      "import": "./dist/input.mjs"
+      "types": "./dist/input/index.d.mts",
+      "import": "./dist/input/index.mjs"
     },
     "./color": {
-      "types": "./dist/color.d.mts",
-      "import": "./dist/color.mjs"
+      "types": "./dist/color/index.d.mts",
+      "import": "./dist/color/index.mjs"
     },
     "./prompt": {
       "types": "./dist/prompt/index.d.mts",
@@ -32,21 +32,18 @@
     "./prompt/raw": {
       "types": "./dist/prompt/raw.d.mts",
       "import": "./dist/prompt/raw.mjs"
-    },
-    "./error": {
-      "types": "./dist/error.d.mts",
-      "import": "./dist/error.mjs"
     }
   },
   "type": "module",
   "scripts": {
-    "test": "vitest tests",
+    "test": "vitest",
     "build": "tsdown",
     "check": "tsc",
     "format": "prettier --check .",
-    "format!": "prettier --write .",
+    "format:fix": "prettier --write .",
     "lint": "eslint .",
-    "lint!": "eslint --fix ."
+    "lint:fix": "eslint --fix .",
+    "prepare": "pnpm build"
   },
   "files": [
     "dist"

@@ -1,5 +1,7 @@
 import { describe, test, expect, vi, beforeEach } from "vitest";
-import { Command, error, i } from "@/index";
+import { Command } from "@/command";
+import * as error from "@/command/error";
+import * as i from "@/input";
 
 describe("Command", () => {
   let root: Command;

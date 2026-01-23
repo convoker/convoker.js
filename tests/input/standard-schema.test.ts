@@ -1,7 +1,8 @@
-import { error } from "@/index";
-import { validate } from "@/standard-schema";
-import { describe, expect, test } from "vitest";
+import { InputValidationError } from "@/input";
+import { validate } from "@/input/standard-schema";
 import * as v from "valibot";
+
+import { describe, expect, test } from "vitest";
 
 describe("validate()", () => {
   test("validate() returns parsed input", async () => {
@@ -10,7 +11,7 @@ describe("validate()", () => {
 
   test("validate() throws on wrong input", async () => {
     await expect(() => validate(v.number(), "hello world")).rejects.toThrow(
-      error.InputValidationError,
+      InputValidationError,
     );
   });
 });

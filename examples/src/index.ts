@@ -60,8 +60,9 @@ program.add(subtract2and3);
 import { inputExample } from "./input";
 import { colorExample } from "./color";
 import { promptExample } from "./prompt";
+import { logExample } from "./log";
 
-program.add(inputExample, colorExample, promptExample);
+program.add(inputExample, colorExample, promptExample, logExample);
 
 // You can run your program by calling `.run()`, which returns a promise:
 async function main() {

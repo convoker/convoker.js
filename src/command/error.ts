@@ -1,24 +1,5 @@
-import type { Command } from "./command";
-import type { Option, Positional } from "./input";
-
-/**
- * Thrown when the command fails to validate an input.
- */
-export class InputValidationError extends Error {
-  /**
-   * A list of messages.
-   */
-  messages: string[];
-
-  /**
-   * Creates a new input validation error.
-   * @param messages The messages.
-   */
-  constructor(messages: string[]) {
-    super(`Validation failed: ${messages.join(", ")}`);
-    this.messages = messages;
-  }
-}
+import { Positional, Option } from "@/input";
+import { Command } from ".";
 
 /**
  * A Convoker-related error. These are usually handled by default.

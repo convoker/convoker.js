@@ -1,4 +1,4 @@
-import { merge } from "./utils";
+import { merge, type DeepPartial } from "@/utils";
 
 /**
  * Detects if the runtime supports colored output.
@@ -189,6 +189,10 @@ export interface Theme {
      */
     error: string;
     /**
+     * Fatal error message symbol.
+     */
+    fatal: string;
+    /**
      * Warning message symbol.
      */
     warning: string;
@@ -234,6 +238,7 @@ export const DEFAULT_THEME: Theme = {
   symbols: {
     success: "✔",
     error: "✖",
+    fatal: "✖",
     warning: "⚠",
   },
 
@@ -249,6 +254,6 @@ export const DEFAULT_THEME: Theme = {
  * @param theme The (partial) theme.
  * @returns The theme, merged with the default theme.
  */
-export function defineTheme(theme: Partial<Theme>): Theme {
-  return merge(DEFAULT_THEME, theme) as Theme;
+export function defineTheme(theme: DeepPartial<Theme>): Theme {
+  return merge(DEFAULT_THEME, theme);
 }

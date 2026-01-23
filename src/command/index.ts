@@ -1,7 +1,7 @@
 import process from "node:process";
 
-import { gray, cyan, bold, type Theme } from "./color";
-import { setTheme as setPromptTheme } from "./prompt";
+import { gray, cyan, bold, type Theme } from "@/color";
+import { setTheme as setPromptTheme } from "@/prompt";
 import {
   ConvokerError,
   HelpAskedError,
@@ -16,7 +16,7 @@ import {
   Positional,
   type InferInput,
   type Input,
-} from "./input";
+} from "@/input";
 
 /**
  * What the command is an alias for.
@@ -721,3 +721,5 @@ function compose(mws: MiddlewareFn<any>[]) {
     return dispatch(0);
   };
 }
+
+export * from "./error";

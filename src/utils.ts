@@ -1,32 +1,44 @@
 /**
+ * Deep `Partial<T>`.
+ */
+export type DeepPartial<T> = {
+  [P in keyof T]?: DeepPartial<T[P]>;
+};
+
+/**
  * All TypeScript primitive types.
  */
 type Primitive = string | number | boolean | symbol | null | undefined | bigint;
 
 /**
+ * A plain TypeScript object.
+ */
+type PlainObject = Record<string | number | symbol, unknown>;
+
+/**
  * Merges two objects deeply.
  */
-export type DeepMerge<T, U> = T extends Primitive
-  ? U
-  : U extends Primitive
-    ? U
-    : T extends Array<infer TItem>
-      ? U extends Array<infer UItem>
+export type DeepMerge<T, U> = U extends Primitive
+  ? T
+  : T extends Primitive
+    ? T
+    : U extends readonly (infer TItem)[]
+      ? T extends readonly (infer UItem)[]
         ? Array<DeepMerge<TItem, UItem>>
-        : U
-      : T extends object
-        ? U extends object
+        : T
+      : U extends PlainObject
+        ? T extends PlainObject
           ? {
-              [K in keyof T | keyof U]: K extends keyof U
-                ? K extends keyof T
-                  ? DeepMerge<T[K], U[K]>
-                  : U[K]
-                : K extends keyof T
-                  ? T[K]
+              [K in keyof U | keyof T]: K extends keyof T
+                ? K extends keyof U
+                  ? DeepMerge<U[K], T[K]>
+                  : T[K]
+                : K extends keyof U
+                  ? U[K]
                   : never;
             }
-          : U
-        : U;
+          : T
+        : T;
 
 /**
  * Checks if a value is a plain object.

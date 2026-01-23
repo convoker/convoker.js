@@ -302,3 +302,5 @@ export function positional<T extends Kind>(kind: T): Positional<T> {
 export function argument<T extends Kind>(kind: T): Positional<T> {
   return new Positional(kind);
 }
+
+export * from "./error";

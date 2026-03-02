@@ -7,9 +7,9 @@ export const logExample = new Command("log")
   .version("1.0.0")
   .action(() => {
     // You can configure logging, change the stdout/stderr, format or theme:
-    // log.setConfig({
-    //   format: "json",
-    // });
+    log.setConfig({
+      format: "json",
+    });
 
     // There are 5 log levels:
     log.trace("Debug message!");

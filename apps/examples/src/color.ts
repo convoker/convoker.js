@@ -1,4 +1,4 @@
-import { Command, color } from "convoker";
+import { Command, theme } from "convoker";
 
 // Colors are available from the `convoker/color` module or `color` from root.
 
@@ -8,6 +8,6 @@ export const colorExample = new Command("color")
   .action(async () => {
     console.log(
       // bold       bright red      "Hello"       green bg      black         "World"
-      `${color.bold(color.redBright("Hello"))}, ${color.bgGreen(color.black("World"))}!`,
+      `${theme.bold(theme.redBright("Hello"))}, ${theme.bgGreen(theme.black("World"))}!`,
     );
   });

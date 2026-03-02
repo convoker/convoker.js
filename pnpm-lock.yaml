@@ -44,9 +44,9 @@ importers:
 
   apps/examples:
     dependencies:
-      '@convoker/core':
+      convoker:
         specifier: workspace:*
-        version: link:../../packages/core
+        version: link:../../packages/convoker
       zod:
         specifier: ^4.3.6
         version: 4.3.6

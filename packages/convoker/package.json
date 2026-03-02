@@ -1,0 +1,38 @@
+{
+  "name": "convoker",
+  "version": "0.5.0",
+  "description": "A simple, type-safe CLI framework.",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "scripts": {
+    "prepare": "tsdown",
+    "check": "tsc"
+  },
+  "keywords": [
+    "cli",
+    "command",
+    "args",
+    "argv",
+    "option",
+    "prompt",
+    "log",
+    "theme"
+  ],
+  "dependencies": {
+    "@convoker/core": "workspace:*",
+    "@convoker/log": "workspace:*",
+    "@convoker/prompt": "workspace:*",
+    "@convoker/theme": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "author": "sprucepad",
+  "license": "MIT",
+  "packageManager": "pnpm@10.30.3"
+}

@@ -1,77 +1,29 @@
 {
-  "name": "convoker",
-  "version": "0.4.1",
-  "description": "A simple, type safe CLI framework for TypeScript.",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/sprucepad/convoker"
-  },
-  "main": "./dist/index.mjs",
-  "types": "./dist/index.d.mts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.mts",
-      "import": "./dist/index.mjs"
-    },
-    "./command": {
-      "types": "./dist/command/index.d.mts",
-      "import": "./dist/command/index.mjs"
-    },
-    "./theme": {
-      "types": "./dist/theme.d.mts",
-      "import": "./dist/theme.mjs"
-    },
-    "./input": {
-      "types": "./dist/input/index.d.mts",
-      "import": "./dist/input/index.mjs"
-    },
-    "./color": {
-      "types": "./dist/color/index.d.mts",
-      "import": "./dist/color/index.mjs"
-    },
-    "./prompt": {
-      "types": "./dist/prompt/index.d.mts",
-      "import": "./dist/prompt/index.mjs"
-    },
-    "./prompt/raw": {
-      "types": "./dist/prompt/raw.d.mts",
-      "import": "./dist/prompt/raw.mjs"
-    }
-  },
-  "type": "module",
+  "name": "@convoker/monorepo",
+  "private": true,
+  "packageManager": "pnpm@10.30.3",
   "scripts": {
-    "test": "vitest",
-    "build": "tsdown",
-    "check": "tsc",
+    "test": "turbo run test",
+    "build:pkg": "turbo run prepare",
+    "build:app": "turbo run build",
+    "build:all": "turbo run prepare build",
+    "check": "turbo run check",
     "format": "prettier --check .",
     "format:fix": "prettier --write .",
     "lint": "eslint .",
-    "lint:fix": "eslint --fix .",
-    "prepare": "pnpm build"
+    "lint:fix": "eslint --fix ."
   },
-  "files": [
-    "dist"
-  ],
-  "keywords": [
-    "cli",
-    "command",
-    "args",
-    "argv",
-    "option"
-  ],
-  "author": "sprucepad",
-  "license": "MIT",
-  "packageManager": "pnpm@10.28.1",
   "devDependencies": {
-    "@eslint/js": "^9.36.0",
-    "@types/node": "~20.19.30",
-    "eslint": "^9.36.0",
-    "globals": "^16.4.0",
-    "prettier": "^3.6.2",
-    "tsdown": "^0.16.0",
-    "typescript": "^5.9.2",
-    "typescript-eslint": "^8.45.0",
-    "valibot": "^1.1.0",
-    "vitest": "^3.2.4"
+    "@eslint/js": "^10.0.1",
+    "@types/node": "~20.19.35",
+    "eslint": "^10.0.2",
+    "globals": "^17.4.0",
+    "prettier": "^3.8.1",
+    "tsdown": "^0.20.3",
+    "turbo": "^2.8.12",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.56.1",
+    "valibot": "^1.2.0",
+    "vitest": "^4.0.18"
   }
 }

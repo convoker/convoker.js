@@ -1,0 +1,30 @@
+{
+  "name": "@convoker/log",
+  "version": "0.1.0",
+  "description": "A simple logging library.",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "scripts": {
+    "test": "vitest",
+    "prepare": "tsdown",
+    "check": "tsc"
+  },
+  "keywords": [
+    "convoker",
+    "log"
+  ],
+  "author": "sprucepad",
+  "license": "MIT",
+  "packageManager": "pnpm@10.30.3",
+  "dependencies": {
+    "@convoker/theme": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

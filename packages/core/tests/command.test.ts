@@ -1,0 +1,385 @@
+import { describe, test, expect, vi, beforeEach } from "vitest";
+import { Command } from "@/command";
+import * as error from "@/error";
+import * as i from "@convoker/input";
+
+describe("Command", () => {
+  let root: Command;
+
+  beforeEach(() => {
+    root = new Command("root", "Root command");
+  });
+
+  test("creates command with name, description, version", () => {
+    const cmd = new Command(["foo", "bar"], "desc", "1.0.0");
+    expect(cmd.$names).toEqual(["foo", "bar"]);
+    expect(cmd.$description).toBe("desc");
+    expect(cmd.$version).toBe("1.0.0");
+  });
+
+  test("adds and resolves subcommands", () => {
+    const sub = new Command("sub").description("test");
+    root.add(sub);
+    expect(root.$children.get("sub")?.command).toBe(sub);
+    expect(sub.$parent).toBe(root);
+  });
+
+  test("alias() re-adds to parent", () => {
+    const sub = new Command(["sub", "s"]);
+    root.add(sub);
+    sub.alias("ss");
+    expect(root.$children.get("sub")?.command).toBe(sub);
+    expect(root.$children.get("s")?.command).toBe(sub);
+  });
+
+  test("parse() parses boolean option", async () => {
+    root.input({
+      v: i.option("boolean", "-v", "--verbose"),
+    });
+    const { input } = await root.parse(["-v"]);
+    expect(input.v).toBe(true);
+  });
+
+  test("parse() parses string option with value", async () => {
+    root.input({
+      o: i.option("string", "-o", "--output"),
+    });
+    const { input } = await root.parse(["--output", "file.txt"]);
+    expect(input.o).toBe("file.txt");
+  });
+
+  test("parse() supports --key=value syntax", async () => {
+    root.input({
+      o: i.option("string", "-o", "--output"),
+    });
+    const { input } = await root.parse(["--output=file.txt"]);
+    expect(input.o).toBe("file.txt");
+  });
+
+  test("parse() supports short option chaining", async () => {
+    root.input({
+      a: i.option("boolean", "-a"),
+      b: i.option("boolean", "-b"),
+    });
+    const { input } = await root.parse(["-ab"]);
+    expect(input).toEqual({ a: true, b: true });
+  });
+
+  test("parse() parses positional args", async () => {
+    root.input({
+      file: i.positional("string").required(),
+    });
+    const { input } = await root.parse(["main.ts"]);
+    expect(input.file).toBe("main.ts");
+  });
+
+  test("parse() fills defaults", async () => {
+    root.input({
+      port: i.option("number", "-p").default(3000),
+    });
+    const { input } = await root.parse([]);
+    expect(input.port).toBe(3000);
+  });
+
+  test("parse() throws on missing required option", async () => {
+    root.input({
+      port: i.option("number", "-p").required(),
+    });
+    expect((await root.parse([])).errors[0]).toBeInstanceOf(
+      error.MissingRequiredOptionError,
+    );
+  });
+
+  test("parse() throws on missing required positional", async () => {
+    root.input({
+      file: i.positional("string").required(),
+    });
+    expect((await root.parse([])).errors[0]).toBeInstanceOf(
+      error.MissingRequiredArgumentError,
+    );
+  });
+
+  test("parse() throws on unknown option if not allowed", async () => {
+    root.input({});
+    expect((await root.parse(["--bad"])).errors[0]).toBeInstanceOf(
+      error.UnknownOptionError,
+    );
+  });
+
+  test("parse() throws on too many arguments if not allowed", async () => {
+    root.input({});
+    expect((await root.parse(["bad"])).errors[0]).toBeInstanceOf(
+      error.TooManyArgumentsError,
+    );
+  });
+
+  test("parse() ignores args over the limit if allowed", async () => {
+    root.allowSurpassArgLimit();
+    root.input({});
+    const { input } = await root.parse(["bad"]);
+    expect(input).toEqual({});
+  });
+
+  test("parse() ignores unknown option if allowed", async () => {
+    root.allowUnknownOptions();
+    root.input({});
+    const { input } = await root.parse(["--bad"]);
+    expect(input).toEqual({});
+  });
+
+  test("run() executes help", async () => {
+    const fn = vi.fn();
+    root.error(fn);
+    await root.run();
+
+    expect(fn).toHaveBeenCalled();
+  });
+
+  test("run() executes action", async () => {
+    const fn = vi.fn();
+    root.input({
+      name: i.positional("string").required(),
+    });
+    root.action(fn);
+    await root.run(["Alice"]);
+    expect(fn).toHaveBeenCalledWith({ name: "Alice" });
+  });
+
+  test("run() prints help screen if no action is set", async () => {
+    const spy = vi.spyOn(root, "handleErrors");
+    await root.run([]);
+    expect(spy).toHaveBeenCalled();
+  });
+
+  test("run() catches CLI errors and prints message", async () => {
+    root.input({
+      required: i.option("string", "-r").required().description("Example"),
+    });
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const helpSpy = vi.spyOn(root, "handleErrors");
+    await root.run([]);
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining("missing required option"),
+    );
+    expect(helpSpy).toHaveBeenCalled();
+    errorSpy.mockRestore();
+  });
+});
+
+describe("Nested subcommands", () => {
+  let root: Command;
+
+  beforeEach(() => {
+    root = new Command("root");
+  });
+
+  test("subCommand() supports callback API", async () => {
+    let a: Command<any> | null = null;
+    root.subCommand(
+      "sub",
+      (c) =>
+        (a = c
+          .description("testing")
+          .version("1.0.0")
+          .action(() => {
+            console.log("it works!");
+          })),
+    );
+
+    const { command } = await root.parse(["sub"]);
+    expect(command).toBe(a);
+  });
+
+  test("parse() navigates into subcommand", async () => {
+    const sub = root.subCommand("sub");
+
+    const { command } = await root.parse(["sub"]);
+    expect(command).toBe(sub);
+  });
+
+  test("parse() handles options in subcommand", async () => {
+    const sub = root.subCommand("sub");
+    sub.input({
+      flag: i.option("boolean", "-f", "--flag"),
+    });
+
+    const { command, input } = await root.parse(["--flag", "sub"]);
+    expect(command).toBe(sub);
+    expect(input.flag).toBe(true);
+  });
+
+  test("parse() handles positional in subcommand", async () => {
+    const sub = root.subCommand("sub");
+    sub.input({
+      file: i.positional("string").required(),
+    });
+
+    const { command, input } = await root.parse(["sub", "main.ts"]);
+    expect(command).toBe(sub);
+    expect(input.file).toBe("main.ts");
+  });
+
+  test("parse() throws if subcommand is missing required option", async () => {
+    const sub = root.subCommand("sub");
+    sub.input({
+      required: i.option("string", "-r").required(),
+    });
+
+    expect((await root.parse(["sub"])).errors[0]).toBeInstanceOf(
+      error.MissingRequiredOptionError,
+    );
+  });
+
+  test("parse() throws if subcommand is missing required positional", async () => {
+    const sub = root.subCommand("sub");
+    sub.input({
+      required: i.positional("string").required(),
+    });
+
+    expect((await root.parse(["sub"])).errors[0]).toBeInstanceOf(
+      error.MissingRequiredArgumentError,
+    );
+  });
+
+  test("run() executes nested subcommand action", async () => {
+    const fn = vi.fn();
+    const sub = root.subCommand("sub");
+    sub.input({
+      name: i.positional("string").required(),
+    });
+    sub.action(fn);
+
+    await root.run(["sub", "Alice"]);
+    expect(fn).toHaveBeenCalledWith({ name: "Alice" });
+  });
+
+  test("run() prints help screen if subcommand has no action", async () => {
+    const sub = root.subCommand("sub");
+    const helpSpy = vi.spyOn(sub, "handleErrors");
+
+    await root.run(["sub"]);
+    expect(helpSpy).toHaveBeenCalled();
+  });
+});
+
+describe("Middlewares", () => {
+  let root: Command;
+  let logs: string[];
+
+  beforeEach(() => {
+    root = new Command("root");
+    logs = [];
+  });
+
+  test("runs a single middleware before and after the action", async () => {
+    root
+      .use(async (input, next) => {
+        logs.push("before");
+        await next();
+        logs.push("after");
+      })
+      .action(async () => {
+        logs.push("action");
+      });
+
+    await root.run([]);
+    expect(logs).toEqual(["before", "action", "after"]);
+  });
+
+  test("runs multiple middlewares in order", async () => {
+    root
+      .use(async (input, next) => {
+        logs.push("mw1-start");
+        await next();
+        logs.push("mw1-end");
+      })
+      .use(async (input, next) => {
+        logs.push("mw2-start");
+        await next();
+        logs.push("mw2-end");
+      })
+      .action(async () => {
+        logs.push("action");
+      });
+
+    await root.run([]);
+    expect(logs).toEqual([
+      "mw1-start",
+      "mw2-start",
+      "action",
+      "mw2-end",
+      "mw1-end",
+    ]);
+  });
+
+  test("propagates middlewares from parent to child", async () => {
+    const sub = root.subCommand("sub");
+    root.use(async (input, next) => {
+      logs.push("root-start");
+      await next();
+      logs.push("root-end");
+    });
+    sub
+      .use(async (input, next) => {
+        logs.push("sub-start");
+        await next();
+        logs.push("sub-end");
+      })
+      .action(async () => {
+        logs.push("action");
+      });
+
+    await root.run(["sub"]);
+    expect(logs).toEqual([
+      "root-start",
+      "sub-start",
+      "action",
+      "sub-end",
+      "root-end",
+    ]);
+  });
+
+  test("passes parsed input to middlewares and action", async () => {
+    root.input({
+      name: i.positional("string").required(),
+    });
+    const received: any[] = [];
+
+    root
+      .use(async (input, next) => {
+        received.push({ mw: input.name });
+        await next();
+      })
+      .action(async (input) => {
+        received.push({ action: input.name });
+      });
+
+    await root.run(["Alice"]);
+    expect(received).toEqual([{ mw: "Alice" }, { action: "Alice" }]);
+  });
+
+  test("middleware can short-circuit without calling next()", async () => {
+    const action = vi.fn();
+    root
+      .use(async () => {
+        logs.push("intercept");
+        // intentionally not calling next()
+      })
+      .action(action);
+
+    await root.run([]);
+    expect(logs).toEqual(["intercept"]);
+    expect(action).not.toHaveBeenCalled();
+  });
+
+  test("throws if middleware calls next() twice", async () => {
+    root
+      .use(async (input, next) => {
+        await next();
+        await expect(next()).rejects.toThrow(/next\(\) called multiple times/);
+      })
+      .action(async () => {});
+
+    await root.run([]);
+  });
+});

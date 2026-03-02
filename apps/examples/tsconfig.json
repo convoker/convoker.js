@@ -1,0 +1,7 @@
+{
+  // You can have any tsconfig for Convoker.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": "."
+  }
+}

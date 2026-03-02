@@ -1,0 +1,33 @@
+{
+  "name": "@convoker/theme",
+  "version": "0.1.0",
+  "description": "A simple CLI theming library.",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    },
+    "./utils": {
+      "types": "./dist/utils.d.mts",
+      "import": "./dist/utils.mjs",
+      "require": "./dist/utils.cjs"
+    }
+  },
+  "scripts": {
+    "test": "vitest",
+    "prepare": "tsdown",
+    "check": "tsc"
+  },
+  "keywords": [
+    "convoker",
+    "theme",
+    "theming"
+  ],
+  "author": "sprucepad",
+  "license": "MIT",
+  "packageManager": "pnpm@10.30.3",
+  "publishConfig": {
+    "access": "public"
+  }
+}

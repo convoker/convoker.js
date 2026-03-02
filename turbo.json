@@ -1,0 +1,23 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "ui": "tui",
+  "tasks": {
+    // packages
+    "prepare": {
+      "dependsOn": ["^prepare"],
+      "outputs": ["dist/**/*"]
+    },
+    "check": {
+      "dependsOn": ["^prepare", "^check"]
+    },
+    "test": {
+      "dependsOn": ["^prepare"],
+      "persistent": true,
+      "cache": false
+    },
+    // apps
+    "start": {
+      "dependsOn": ["^prepare"]
+    }
+  }
+}

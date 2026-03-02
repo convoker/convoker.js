@@ -1,0 +1,8 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": "."
+  },
+  // not sure why this is needed
+  "exclude": ["dist", "node_modules", ".turbo"]
+}

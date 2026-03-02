@@ -1,0 +1,60 @@
+{
+  "name": "@convoker/core",
+  "version": "0.4.1",
+  "description": "A simple, type-safe CLI argument parser.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/convoker/convoker.js"
+  },
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "type": "module",
+  "scripts": {
+    "test": "vitest",
+    "prepare": "tsdown",
+    "check": "tsc"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "cli",
+    "command",
+    "args",
+    "argv",
+    "option"
+  ],
+  "author": "sprucepad",
+  "license": "MIT",
+  "packageManager": "pnpm@10.30.3",
+  "dependencies": {
+    "@convoker/theme": "workspace:*",
+    "@convoker/input": "workspace:*"
+  },
+  "peerDependencies": {
+    "@convoker/log": "workspace:*",
+    "@convoker/prompt": "workspace:*",
+    "@convoker/theme": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependenciesMeta": {
+    "@convoker/log": {
+      "optional": true
+    },
+    "@convoker/prompt": {
+      "optional": true
+    },
+    "@convoker/theme": {
+      "optional": true
+    }
+  }
+}

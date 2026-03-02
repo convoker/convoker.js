@@ -43,6 +43,9 @@
     "@convoker/prompt": "workspace:*",
     "@convoker/theme": "workspace:*"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "peerDependenciesMeta": {
     "@convoker/log": {
       "optional": true

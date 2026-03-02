@@ -29,6 +29,9 @@
     "@convoker/prompt": "workspace:*",
     "@convoker/theme": "workspace:*"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "author": "sprucepad",
   "license": "MIT",
   "packageManager": "pnpm@10.30.3"

@@ -1,5 +1,5 @@
-import { InputValidationError } from "@/input";
-import { validate } from "@/input/standard-schema";
+import { InputValidationError } from "@/index";
+import { validate } from "@//standard-schema";
 import * as v from "valibot";
 
 import { describe, expect, test } from "vitest";

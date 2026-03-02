@@ -30,7 +30,7 @@ describe("readLine", () => {
   test("should return user input via readline (Node)", async () => {
     mockQuestion.mockImplementation((_msg, cb) => cb("test input"));
 
-    const { readLine } = await import("@/prompt/raw");
+    const { readLine } = await import("@/raw");
     const result = await readLine("Enter value: ");
     expect(mockCreateInterface).toHaveBeenCalled();
     expect(result).toBe("test input");
@@ -39,7 +39,7 @@ describe("readLine", () => {
   test("should use default value if no input is provided", async () => {
     mockQuestion.mockImplementation((_msg, cb) => cb(""));
 
-    const { readLine } = await import("@/prompt/raw");
+    const { readLine } = await import("@/raw");
     const result = await readLine("Prompt: ", "default");
     expect(result).toBe("default");
   });
@@ -49,7 +49,7 @@ describe("readLine", () => {
     mockInterface._writeToOutput = localWrite;
     mockQuestion.mockImplementation((_msg, cb) => cb("secret"));
 
-    const { readLine } = await import("@/prompt/raw");
+    const { readLine } = await import("@/raw");
     await readLine("Password: ", undefined, { masked: true, maskChar: "#" });
 
     // simulate manual write
@@ -68,7 +68,7 @@ describe("readKey", () => {
     };
     vi.stubGlobal("process", { stdin });
 
-    const { readKey } = await import("@/prompt/raw");
+    const { readKey } = await import("@/raw");
 
     const promise = readKey();
     const handler = stdin.once.mock.calls[0][1];
@@ -86,7 +86,7 @@ describe("readKey", () => {
     };
     vi.stubGlobal("process", { stdin });
 
-    const { readKey } = await import("@/prompt/raw");
+    const { readKey } = await import("@/raw");
 
     const promise = readKey();
     const handler = stdin.once.mock.calls[0][1];
@@ -111,7 +111,7 @@ describe("cursor and clear functions", () => {
   });
 
   test("clearLines should write correct escape sequences", async () => {
-    const { clearLines } = await import("@/prompt/raw");
+    const { clearLines } = await import("@/raw");
     clearLines(2);
     expect(writeSpy).toHaveBeenCalledWith(
       expect.stringContaining("\x1b[2K\x1b[1A"),
@@ -120,13 +120,13 @@ describe("cursor and clear functions", () => {
   });
 
   test("cursorUp should move cursor up", async () => {
-    const { cursorUp } = await import("@/prompt/raw");
+    const { cursorUp } = await import("@/raw");
     cursorUp(3);
     expect(writeSpy).toHaveBeenCalledWith("\x1b[3A");
   });
 
   test("cursorDown should move cursor down", async () => {
-    const { cursorDown } = await import("@/prompt/raw");
+    const { cursorDown } = await import("@/raw");
     cursorDown(2);
     expect(writeSpy).toHaveBeenCalledWith("\x1b[2B");
   });

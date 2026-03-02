@@ -1,7 +1,7 @@
 import Stream from "node:stream";
 import process from "node:process";
-import { DEFAULT_THEME, type Theme } from "@/theme";
-import { merge, type DeepPartial } from "@/utils";
+import { DEFAULT_THEME, type Theme } from "@convoker/theme";
+import { merge, type DeepPartial } from "@convoker/theme/utils";
 import { WriteError } from "./error";
 
 let th: Theme = DEFAULT_THEME;

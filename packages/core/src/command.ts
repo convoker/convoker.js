@@ -1,9 +1,6 @@
 import process from "node:process";
 
-import { gray, cyan, bold } from "@/color";
-import type { Theme } from "@/theme";
-import { setTheme as setPromptTheme } from "@/prompt";
-import { setTheme as setLogTheme } from "@/log";
+import { gray, cyan, bold, type Theme } from "@convoker/theme";
 import {
   ConvokerError,
   HelpAskedError,
@@ -18,7 +15,7 @@ import {
   Positional,
   type InferInput,
   type Input,
-} from "@/input";
+} from "@convoker/input";
 
 /**
  * What the command is an alias for.
@@ -249,8 +246,8 @@ export class Command<T extends Input = Input> {
       command.$parent = this;
       const alias = { command, alias: command.$names[0] };
       for (let i = 0; i < command.$names.length; i++) {
-        if (i === 0) this.$children.set(command.$names[i], { command });
-        this.$children.set(command.$names[i], alias);
+        if (i === 0) this.$children.set(command.$names[i]!, { command });
+        this.$children.set(command.$names[i]!, alias);
       }
     }
     return this;
@@ -339,13 +336,27 @@ export class Command<T extends Input = Input> {
       }
     }
 
+    let promptModule: { setTheme: (arg: Theme) => void } | null;
+    try {
+      promptModule = await import("@convoker/prompt");
+    } catch {
+      promptModule = null;
+    }
+
+    let logModule: { setTheme: (arg: Theme) => void } | null;
+    try {
+      logModule = await import("@convoker/log");
+    } catch {
+      logModule = null;
+    }
+
     let isVersion = false;
     let isHelp = false;
     for (let i = 0; i < argv.length; i++) {
-      const arg = argv[i];
+      const arg = argv[i]!;
       if (arg.startsWith("--")) {
         // --long[=value] or --long [value]
-        const [key, value] = arg.slice(2).split("=");
+        const [key, value] = arg.slice(2).split("=") as [string, string];
 
         let isSpecial = false;
         if (key === "help") {
@@ -368,7 +379,7 @@ export class Command<T extends Input = Input> {
         }
       } else if (arg.startsWith("-")) {
         // -abc or -k[=value] or -k [value]
-        const [shortKeys, value] = arg.slice(1).split("=");
+        const [shortKeys, value] = arg.slice(1).split("=") as [string, string];
         const chars = shortKeys.split("");
         let usedValue: string | undefined = value;
 
@@ -396,8 +407,8 @@ export class Command<T extends Input = Input> {
         if (command.$children.has(arg) && !found) {
           command = command.$children.get(arg)!.command;
           if (command.$theme) {
-            setPromptTheme(command.$theme);
-            setLogTheme(command.$theme);
+            promptModule?.setTheme(command.$theme);
+            logModule?.setTheme(command.$theme);
           }
         } else {
           found = true;
@@ -475,7 +486,7 @@ export class Command<T extends Input = Input> {
 
     let i = 0;
     for (const key in this.$input) {
-      const value = this.$input[key];
+      const value = this.$input[key]!;
       if (value instanceof Positional) {
         map.set(i++, { value, key });
       } else {
@@ -518,7 +529,7 @@ export class Command<T extends Input = Input> {
     // eslint-disable-next-line -- necessary for traversing up the tree
     let cmd: Command<any> | undefined = this;
     while (cmd) {
-      names.unshift(cmd.$names[0]);
+      names.unshift(cmd.$names[0]!);
       cmd = cmd.$parent;
     }
     return names.join(" ");
@@ -606,9 +617,9 @@ export class Command<T extends Input = Input> {
         ).values(),
       );
 
-      const longest = Math.max(...deduped.map((c) => c.$names[0].length));
+      const longest = Math.max(...deduped.map((c) => c.$names[0]!.length));
       for (const cmd of deduped) {
-        const line = `  ${cyan(pad(cmd.$names[0], longest + 4))}${gray(cmd.$description) ?? ""}`;
+        const line = `  ${cyan(pad(cmd.$names[0]!, longest + 4))}${gray(cmd.$description) ?? ""}`;
         console.log(line);
       }
       console.log();
@@ -724,5 +735,3 @@ function compose(mws: MiddlewareFn<any>[]) {
     return dispatch(0);
   };
 }
-
-export * from "./error";

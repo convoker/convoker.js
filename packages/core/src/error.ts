@@ -1,5 +1,5 @@
-import { Positional, Option } from "@/input";
-import { Command } from ".";
+import { Positional, Option } from "@convoker/input";
+import { Command } from "./command";
 
 /**
  * A Convoker-related error. These are usually handled by default.

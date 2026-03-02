@@ -1,5 +1,5 @@
 import * as v from "valibot";
-import * as i from "@/input";
+import * as i from "@/index";
 import { describe, test, expect } from "vitest";
 
 // --- Runtime tests ---

@@ -1,9 +1,18 @@
+type IsPlainObject<T> = T extends object
+  ? T extends (...args: unknown[]) => unknown
+    ? false
+    : T extends any[]
+      ? false
+      : T extends abstract new (...args: any) => any
+        ? false
+        : true
+  : false;
+
 /**
  * Deep `Partial<T>`.
  */
-export type DeepPartial<T> = {
-  [P in keyof T]?: DeepPartial<T[P]>;
-};
+export type DeepPartial<T> =
+  IsPlainObject<T> extends true ? { [K in keyof T]?: DeepPartial<T[K]> } : T;
 
 /**
  * All TypeScript primitive types.

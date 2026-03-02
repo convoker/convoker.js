@@ -3,9 +3,12 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
 
-import { DEFAULT_THEME, type Theme } from "@/theme";
-import { validate, type StandardSchemaV1 } from "@/input/standard-schema";
-import { InputValidationError } from "@/input/error";
+import { DEFAULT_THEME, type Theme } from "@convoker/theme";
+import {
+  InputValidationError,
+  validate,
+  type StandardSchemaV1,
+} from "@convoker/input";
 import * as raw from "./raw";
 
 let theme: Theme = DEFAULT_THEME;
@@ -187,7 +190,7 @@ export async function select<T>(opts: SelectOpts<T>): Promise<T> {
     raw.clearLines(options.length + 1);
     console.log(th.primary(opts.message));
     for (let i = 0; i < options.length; i++) {
-      const o = options[i];
+      const o = options[i]!;
       const prefix = i === index ? (th.accent?.("> ") ?? "> ") : "  ";
       const label = o.disabled
         ? th.secondary(o.label)
@@ -206,7 +209,7 @@ export async function select<T>(opts: SelectOpts<T>): Promise<T> {
     if (key === "up" && index > 0) index--;
     else if (key === "down" && index < options.length - 1) index++;
     else if (key === "enter") {
-      const choice = options[index];
+      const choice = options[index]!;
       if (choice.disabled) continue;
       raw.clearLines(options.length + 1);
       console.log(th.success(`${th.symbols?.success ?? "✔"} ${choice.label}`));
@@ -246,7 +249,7 @@ export async function multiselect<T>(opts: SelectOpts<T>): Promise<T[]> {
       if (selected.has(index)) selected.delete(index);
       else selected.add(index);
     } else if (key === "enter") {
-      const chosen = Array.from(selected).map((i) => options[i].value);
+      const chosen = Array.from(selected).map((i) => options[i]!.value);
       raw.clearLines(options.length + 1);
       console.log(th.success(`${opts.message} ${chosen.length} selected`));
       return chosen;
@@ -302,7 +305,7 @@ export async function search<T>(opts: SearchOpts<T>): Promise<T> {
     );
 
     if (matches.length === 1) {
-      return matches[0].value;
+      return matches[0]!.value;
     }
 
     const input = await raw.readLine(th.secondary(`Search: ${query}`));

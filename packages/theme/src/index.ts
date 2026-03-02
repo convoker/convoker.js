@@ -1,5 +1,5 @@
-import { merge, type DeepPartial } from "@/utils";
-import * as color from "@/color";
+import { merge, type DeepPartial } from "./utils";
+import * as color from "./color";
 
 /**
  * A theme.
@@ -133,3 +133,5 @@ export const DEFAULT_THEME: Theme = {
 export function defineTheme(theme: DeepPartial<Theme>): Theme {
   return merge(DEFAULT_THEME, theme);
 }
+
+export * from "./color";

@@ -11,8 +11,8 @@ import {
   setTheme,
   DEFAULT_CONFIG,
   WriteError,
-} from "@/log";
-import { DEFAULT_THEME, type Theme } from "@/theme";
+} from "@/index";
+import { DEFAULT_THEME, type Theme } from "@convoker/theme";
 
 /**
  * Helper to create a writable stream we can control and inspect
@@ -58,7 +58,7 @@ describe("log module", () => {
     expect(stdout.write).toHaveBeenCalledTimes(1);
     expect(stderr.write).not.toHaveBeenCalled();
 
-    const output = stdout.write.mock.calls[0][0];
+    const output = stdout.write.mock.calls[0]![0]!;
     expect(output).toContain("hello");
     expect(output).toContain("TRACE");
   });
@@ -69,7 +69,7 @@ describe("log module", () => {
     expect(stdout.write).toHaveBeenCalledTimes(1);
     expect(stderr.write).not.toHaveBeenCalled();
 
-    const output = stdout.write.mock.calls[0][0];
+    const output = stdout.write.mock.calls[0]![0]!;
     expect(output).toContain("world");
     expect(output).toContain("INFO");
   });
@@ -80,7 +80,7 @@ describe("log module", () => {
     expect(stderr.write).toHaveBeenCalledTimes(1);
     expect(stdout.write).not.toHaveBeenCalled();
 
-    const output = stderr.write.mock.calls[0][0];
+    const output = stderr.write.mock.calls[0]![0]!;
     expect(output).toContain("be careful");
     expect(output).toContain("WARN");
   });
@@ -91,7 +91,7 @@ describe("log module", () => {
     expect(stderr.write).toHaveBeenCalledTimes(1);
     expect(stdout.write).not.toHaveBeenCalled();
 
-    const output = stderr.write.mock.calls[0][0];
+    const output = stderr.write.mock.calls[0]![0]!;
     expect(output).toContain("something broke");
     expect(output).toContain("ERROR");
   });
@@ -103,7 +103,7 @@ describe("log module", () => {
     expect(stdout.write).not.toHaveBeenCalled();
     expect(exitSpy).toHaveBeenCalledWith(-1);
 
-    const output = stderr.write.mock.calls[0][0];
+    const output = stderr.write.mock.calls[0]![0]!;
     expect(output).toContain("boom");
     expect(output).toContain("FATAL");
   });
@@ -141,7 +141,7 @@ describe("log module", () => {
 
     info({ a: 1 });
 
-    const output = stdout.write.mock.calls[0][0];
+    const output = stdout.write.mock.calls[0]![0]!;
     const parsed = JSON.parse(output);
 
     expect(parsed).toMatchObject({
@@ -160,7 +160,7 @@ describe("log module", () => {
     setTheme(customTheme);
     info("custom");
 
-    const output = stdout.write.mock.calls[0][0];
+    const output = stdout.write.mock.calls[0]![0]!;
     expect(output).toContain("INFO(");
     expect(output).toContain("custom");
   });

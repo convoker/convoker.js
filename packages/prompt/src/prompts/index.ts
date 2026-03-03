@@ -8,3 +8,4 @@ export {
 export { default as search, type SearchOpts } from "./search";
 export { default as confirm, type ConfirmOpts } from "./confirm";
 export { default as editor, type EditorOpts } from "./editor";
+export { setTheme } from "@/core";

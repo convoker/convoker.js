@@ -1,4 +1,4 @@
-import type { SharedOpts } from "@/core";
+import type { CoreOpts } from "@/core";
 
 /**
  * An option for select input.
@@ -25,10 +25,7 @@ export interface SelectOption<T> {
 /**
  * Options for select input.
  */
-export interface SelectOpts<
-  T,
-  M extends boolean = false,
-> extends SharedOpts<T> {
+export interface SelectOpts<T, M extends boolean = false> extends CoreOpts<T> {
   /**
    * Every option the user can pick from.
    */

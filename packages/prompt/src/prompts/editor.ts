@@ -1,9 +1,9 @@
-import type { SharedOpts } from "@/core";
+import type { CoreOpts } from "@/core";
 
 /**
  * Options for opening the system editor.
  */
-export interface EditorOpts extends SharedOpts<string> {
+export interface EditorOpts extends CoreOpts<string> {
   /**
    * The initial value.
    */

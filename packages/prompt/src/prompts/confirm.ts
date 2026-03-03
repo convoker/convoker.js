@@ -1,9 +1,9 @@
-import type { SharedOpts } from "@/core";
+import type { CoreOpts } from "@/core";
 
 /**
  * Options for confirm input.
  */
-export interface ConfirmOpts extends SharedOpts<boolean> {
+export interface ConfirmOpts extends CoreOpts<boolean> {
   /**
    * What gets displayed for the Yes option.
    */

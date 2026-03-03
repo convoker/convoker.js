@@ -1,13 +1,45 @@
 import type { StandardSchemaV1 } from "@convoker/input";
 import type { Theme } from "@convoker/theme";
 
-export interface SharedOpts<T> {
+/**
+ * Base options for prompts.
+ */
+export interface CoreOpts<T> {
+  /**
+   * The message of the prompt.
+   */
   message: string;
+  /**
+   * A validator function, or a Standard Schema validator.
+   */
   validate?: StandardSchemaV1<any, T> | ((value: T) => boolean | T);
-
+  /**
+   * The theme of the prompt.
+   */
   theme?: Theme;
+  /**
+   * The default value.
+   */
+  default?: T;
+
+  /**
+   * The standard input. Defaults to `process.stdin`.
+   */
   input?: NodeJS.ReadableStream;
+  /**
+   * The standard output. Defaults to `process.stdout`.
+   */
   output?: NodeJS.WritableStream;
+  /**
+   * If the screen should be cleared when finishing a prompt.
+   */
   clearPromptOnDone?: boolean;
+  /**
+   * An `AbortSignal` to cancel the prompt.
+   */
   signal?: AbortSignal;
 }
+
+export * from "./theme";
+export * from "./static";
+export * from "./interactive";

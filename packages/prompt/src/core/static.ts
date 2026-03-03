@@ -17,22 +17,33 @@ export interface PromptContext<T> {
 
 export type PromptRenderer<T, O extends CoreOpts<T>> = (
   ctx: PromptContext<T> & { opts: O },
-) => Promise<void>;
+) => Promise<void> | void;
 
 export function createPrompt<T, O extends CoreOpts<T>>(
   renderer: PromptRenderer<T, O>,
 ) {
   return async function prompt(opts: O): Promise<T> {
-    return new Promise<T>(async (resolve, reject) => {
+    return new Promise<T>((resolve, reject) => {
       const input = opts.input ?? process.stdin;
       const output = opts.output ?? process.stdout;
       const theme = opts.theme ?? getTheme();
 
       let finished = false;
 
+      const cleanup = () => {
+        input.removeAllListeners("data");
+        input.pause();
+
+        if (opts.signal) {
+          opts.signal.removeEventListener("abort", abort);
+        }
+      };
+
       const done = (value: T) => {
         if (finished) return;
         finished = true;
+
+        cleanup();
 
         if (opts.clearPromptOnDone) {
           output.write("\x1Bc");
@@ -44,6 +55,7 @@ export function createPrompt<T, O extends CoreOpts<T>>(
       const abort = () => {
         if (finished) return;
         finished = true;
+        cleanup();
         reject(new Error("Prompt aborted"));
       };
 
@@ -57,13 +69,13 @@ export function createPrompt<T, O extends CoreOpts<T>>(
           return result;
         }
 
-        // StandardSchemaV1
         const parsed = await opts.validate["~standard"].validate(value);
         if (parsed.issues) {
           throw new PromptValidationError(
             parsed.issues.map((issue) => issue.message),
           );
         }
+
         return parsed.value;
       };
 
@@ -84,7 +96,7 @@ export function createPrompt<T, O extends CoreOpts<T>>(
       }
 
       try {
-        await renderer(ctx as any);
+        Promise.resolve(renderer(ctx as any)).catch(reject);
       } catch (err) {
         reject(err);
       }

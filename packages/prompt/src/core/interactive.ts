@@ -1,9 +1,12 @@
 import readline from "node:readline";
 import type { CoreOpts } from ".";
-import type { PromptContext } from "./static";
+import { createPrompt, type PromptContext } from "./static";
 
-export interface PromptState {
-  cursor: number;
+export interface Keypress {
+  name: string;
+  ctrl: boolean;
+  meta: boolean;
+  shift: boolean;
 }
 
 export interface InteractiveContext<
@@ -18,77 +21,81 @@ export interface InteractiveContext<
   onKeypress: (handler: (key: Keypress) => void) => void;
 }
 
-export interface Keypress {
-  name: string;
-  ctrl: boolean;
-  meta: boolean;
-  shift: boolean;
-}
-
 export function createInteractivePrompt<T, O extends CoreOpts<T>, S>(
   setup: (ctx: InteractiveContext<T, O, S>) => void,
   initialState: (opts: O) => S,
 ) {
-  return async function prompt(opts: O): Promise<T> {
-    return new Promise((resolve, reject) => {
-      const input = opts.input ?? process.stdin;
-      const output = opts.output ?? process.stdout;
+  return createPrompt<T, O>((baseCtx) => {
+    const { input, output } = baseCtx;
 
-      readline.emitKeypressEvents(input);
-      if ("isTTY" in input && input.isTTY && "setRawMode" in input)
-        input.setRawMode(true);
+    readline.emitKeypressEvents(input);
 
-      let state = initialState(opts);
-      let keyHandler: ((key: Keypress) => void) | null = null;
+    if (
+      "isTTY" in input &&
+      input.isTTY &&
+      "setRawMode" in input &&
+      typeof input.setRawMode === "function"
+    ) {
+      input.setRawMode(true);
+    }
 
-      const cleanup = () => {
-        if ("isTTY" in input && input.isTTY && "setRawMode" in input)
-          input.setRawMode(false);
-        input.removeAllListeners("keypress");
-      };
+    let state = initialState(baseCtx.opts);
+    let keyHandler: ((key: Keypress) => void) | null = null;
 
-      const render = () => {
-        output.write("\x1Bc"); // clear
-        draw();
-      };
+    const render = () => {
+      output.write("\x1Bc");
+      setup(ctx);
+    };
 
-      const setState = (updater: (prev: S) => S) => {
-        state = updater(state);
-        render();
-      };
-
-      const done = (value: T) => {
-        cleanup();
-        resolve(value);
-      };
-
-      const ctx: InteractiveContext<T, O, S> = {
-        opts,
-        input,
-        output,
-        theme: opts.theme!,
-        state,
-        setState,
-        render,
-        done,
-        abort: () => reject(new Error("aborted")),
-        error: reject,
-        validate: async (v) => v,
-        value: undefined,
-        onKeypress: (handler) => {
-          keyHandler = handler;
-        },
-      };
-
-      const draw = () => {
-        setup(ctx);
-      };
-
-      input.on("keypress", (_, key) => {
-        keyHandler?.(key);
-      });
-
+    const setState = (updater: (prev: S) => S) => {
+      state = updater(state);
+      ctx.state = state;
       render();
+    };
+
+    const onKeypress = (handler: (key: Keypress) => void) => {
+      keyHandler = handler;
+    };
+
+    const ctx: InteractiveContext<T, O, S> = {
+      ...baseCtx,
+      state,
+      setState,
+      render,
+      onKeypress,
+    };
+
+    const cleanupInteractive = () => {
+      input.removeAllListeners("keypress");
+
+      if (
+        "isTTY" in input &&
+        input.isTTY &&
+        "setRawMode" in input &&
+        typeof input.setRawMode === "function"
+      ) {
+        input.setRawMode(false);
+      }
+    };
+
+    // Patch base done/abort to include interactive cleanup
+    const originalDone = baseCtx.done;
+    const originalAbort = baseCtx.abort;
+
+    baseCtx.done = (value: T) => {
+      cleanupInteractive();
+      originalDone(value);
+    };
+
+    baseCtx.abort = () => {
+      cleanupInteractive();
+      originalAbort();
+    };
+
+    input.on("keypress", (_, key) => {
+      keyHandler?.(key);
     });
-  };
+
+    render();
+  });
 }

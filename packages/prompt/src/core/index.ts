@@ -1,3 +1,4 @@
+import tty from "node:tty";
 import type { StandardSchemaV1 } from "@convoker/input";
 import type { Theme } from "@convoker/theme";
 
@@ -25,11 +26,11 @@ export interface CoreOpts<T> {
   /**
    * The standard input. Defaults to `process.stdin`.
    */
-  input?: NodeJS.ReadableStream;
+  input?: tty.ReadStream;
   /**
    * The standard output. Defaults to `process.stdout`.
    */
-  output?: NodeJS.WritableStream;
+  output?: tty.WriteStream;
   /**
    * If the screen should be cleared when finishing a prompt.
    */

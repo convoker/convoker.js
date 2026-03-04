@@ -30,12 +30,7 @@ export function createInteractivePrompt<T, O extends CoreOpts<T>, S>(
 
     readline.emitKeypressEvents(input);
 
-    if (
-      "isTTY" in input &&
-      input.isTTY &&
-      "setRawMode" in input &&
-      typeof input.setRawMode === "function"
-    ) {
+    if (input.isTTY) {
       input.setRawMode(true);
     }
 
@@ -60,12 +55,7 @@ export function createInteractivePrompt<T, O extends CoreOpts<T>, S>(
     const cleanupInteractive = () => {
       input.removeAllListeners("keypress");
 
-      if (
-        "isTTY" in input &&
-        input.isTTY &&
-        "setRawMode" in input &&
-        typeof input.setRawMode === "function"
-      ) {
+      if (input.isTTY) {
         input.setRawMode(false);
       }
     };

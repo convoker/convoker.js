@@ -33,21 +33,25 @@ export default createPrompt<string, TextOpts>(async (ctx) => {
   input.resume();
 
   input.once("data", async (chunk) => {
-    let value = chunk.trim();
+    try {
+      let value = chunk.toString("utf-8").trim();
 
-    if (!value && opts.default !== undefined) {
-      value = opts.default;
+      if (!value && opts.default !== undefined) {
+        value = opts.default;
+      }
+
+      if (opts.minLength && value.length < opts.minLength) {
+        throw new PromptValidationError(["Too short"]);
+      }
+
+      if (opts.maxLength && value.length > opts.maxLength) {
+        throw new PromptValidationError(["Too long"]);
+      }
+
+      const validated = await validate(value);
+      done(validated);
+    } catch (err) {
+      ctx.error(err);
     }
-
-    if (opts.minLength && value.length < opts.minLength) {
-      throw new PromptValidationError(["Too short"]);
-    }
-
-    if (opts.maxLength && value.length > opts.maxLength) {
-      throw new PromptValidationError(["Too long"]);
-    }
-
-    const validated = await validate(value);
-    done(validated);
   });
 });

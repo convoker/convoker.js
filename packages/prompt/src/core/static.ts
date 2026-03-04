@@ -1,3 +1,4 @@
+import tty from "node:tty";
 import { getTheme } from "./theme";
 import { PromptValidationError } from "./error";
 import type { Theme } from "@convoker/theme";
@@ -11,8 +12,8 @@ export interface PromptContext<T> {
   abort: () => void;
   validate: (value: T) => Promise<T>;
   theme: Theme;
-  input: NodeJS.ReadableStream;
-  output: NodeJS.WritableStream;
+  input: tty.ReadStream;
+  output: tty.WriteStream;
 }
 
 export type PromptRenderer<T, O extends CoreOpts<T>> = (

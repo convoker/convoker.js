@@ -122,10 +122,9 @@ const multiSelect = createInteractivePrompt<
   SelectOpts<any, any>,
   MultiSelectState
 >({
-  async render(ctx) {
-    const { output, opts, state, setState, onKeypress, done, abort } = ctx;
+  async setup(ctx) {
+    const { setState, opts, onKeypress, abort, done } = ctx;
     const { options } = opts;
-
     const move = (dir: 1 | -1) => {
       setState((prev) => {
         let next = prev.cursor;
@@ -139,7 +138,7 @@ const multiSelect = createInteractivePrompt<
     };
 
     const toggle = () => {
-      const { cursor } = state;
+      const { cursor } = ctx.state;
       if (options[cursor]?.disabled) return;
 
       setState((prev) => {
@@ -157,7 +156,7 @@ const multiSelect = createInteractivePrompt<
       else if (key.name === "down") move(1);
       else if (key.name === "space") toggle();
       else if (key.name === "return") {
-        const values = [...state.selected].map((i) => options[i]!.value);
+        const values = [...ctx.state.selected].map((i) => options[i]!.value);
 
         try {
           const validated = await ctx.validate(values);
@@ -167,6 +166,11 @@ const multiSelect = createInteractivePrompt<
         }
       }
     });
+  },
+
+  render(ctx) {
+    const { output, opts, state } = ctx;
+    const { options } = opts;
 
     // Render
     output.write(`${opts.message ?? "Select options"}\n`);
@@ -182,6 +186,7 @@ const multiSelect = createInteractivePrompt<
       output.write(`${cursor} ${checkbox} ${opt.label}${disabled}\n`);
     });
   },
+
   initialState(opts) {
     const selected = new Set<number>();
 

@@ -13,12 +13,12 @@ export const promptExample = new Command("prompt")
 
     console.log(textResult);
 
-    // // The password prompt is a hidden input prompt.
-    // const password = await prompt.password({
-    //   message: "Type your password!",
-    // });
+    // The password prompt is a hidden input prompt.
+    const password = await prompt.password({
+      message: "Type your password!",
+    });
 
-    // console.log(password);
+    console.log(password);
 
     // The `select` prompt allows the user to choose between a series of pre-defined options.
     const selectResult = await prompt.select({

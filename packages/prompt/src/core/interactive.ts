@@ -42,12 +42,14 @@ export function createInteractivePrompt<T, O extends CoreOpts<T>, S>(config: {
     let keyHandler: ((key: Keypress) => void) | null = null;
 
     const cleanupInteractive = () => {
-      input.removeAllListeners("keypress");
-      output.write("\n");
+      input.removeListener("keypress", handleKeypress);
 
       if (input.isTTY) {
         input.setRawMode(false);
+        input.pause();
       }
+
+      output.write("\n");
     };
 
     const originalDone = baseCtx.done;
@@ -92,9 +94,11 @@ export function createInteractivePrompt<T, O extends CoreOpts<T>, S>(config: {
       onKeypress,
     };
 
-    input.on("keypress", (_, key) => {
+    const handleKeypress = (_: unknown, key: Keypress) => {
       keyHandler?.(key);
-    });
+    };
+
+    input.on("keypress", handleKeypress);
 
     // Save cursor position
     output.write("\x1B[s");

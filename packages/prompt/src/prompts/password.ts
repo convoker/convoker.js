@@ -1,4 +1,4 @@
-import { createInteractivePrompt } from "@/core";
+import { createInteractivePrompt, PromptValidationError } from "@/core";
 import type { TextOpts } from "./text";
 
 /**
@@ -26,21 +26,13 @@ interface PasswordState {
  * @param opts Options for password input.
  * @returns The password.
  */
-export default createInteractivePrompt<string, PasswordOpts, PasswordState>(
-  (ctx) => {
-    const { output, opts, state, setState, onKeypress, done, validate } = ctx;
-
-    const mask = opts.mask ?? "*";
-
-    const message = state.confirming
-      ? `${opts.message} (confirm)`
-      : opts.message;
-
-    const visible = mask.repeat(state.value.length);
-
-    output.write(`${message} ${visible}`);
+export default createInteractivePrompt<string, PasswordOpts, PasswordState>({
+  setup(ctx) {
+    const { onKeypress, setState, done, validate, opts } = ctx;
 
     onKeypress(async (key) => {
+      const state = ctx.state;
+
       if (key.ctrl && key.name === "c") {
         ctx.abort();
         return;
@@ -102,8 +94,23 @@ export default createInteractivePrompt<string, PasswordOpts, PasswordState>(
       }
     });
   },
-  () => ({
+
+  render(ctx) {
+    const { output, opts, state } = ctx;
+
+    const mask = opts.mask ?? "*";
+
+    const message = state.confirming
+      ? `${opts.message} (confirm)`
+      : opts.message;
+
+    const visible = mask.repeat(state.value.length);
+
+    output.write(`${message} ${visible}`);
+  },
+
+  initialState: () => ({
     value: "",
     confirming: false,
   }),
-);
+});

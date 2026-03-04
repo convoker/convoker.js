@@ -121,8 +121,8 @@ const multiSelect = createInteractivePrompt<
   any,
   SelectOpts<any, any>,
   MultiSelectState
->(
-  async (ctx) => {
+>({
+  async render(ctx) {
     const { output, opts, state, setState, onKeypress, done, abort } = ctx;
     const { options } = opts;
 
@@ -182,7 +182,7 @@ const multiSelect = createInteractivePrompt<
       output.write(`${cursor} ${checkbox} ${opt.label}${disabled}\n`);
     });
   },
-  (opts) => {
+  initialState(opts) {
     const selected = new Set<number>();
 
     if (typeof opts.initialIndex === "number") {
@@ -197,4 +197,4 @@ const multiSelect = createInteractivePrompt<
 
     return { cursor, selected };
   },
-);
+});

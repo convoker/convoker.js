@@ -32,7 +32,6 @@ export function createPrompt<T, O extends CoreOpts<T>>(
       let finished = false;
 
       const cleanup = () => {
-        input.removeAllListeners("data");
         input.pause();
 
         if (opts.signal) {

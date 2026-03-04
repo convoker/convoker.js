@@ -48,7 +48,7 @@ describe("createInteractivePrompt", () => {
     );
 
     expect(setup).toHaveBeenCalled();
-    expect(output.write).toHaveBeenCalledWith("\x1Bc");
+    expect(output.write).toHaveBeenCalledWith("\r\x1B[K");
   });
 
   it("updates state with setState and re-renders", async () => {

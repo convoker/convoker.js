@@ -1,8 +1,8 @@
 import process from "node:process";
 import tty from "node:tty";
-import { getTheme } from "./theme";
 import { PromptValidationError } from "./error";
 import type { Theme } from "@convoker/theme";
+import { getTheme } from "@convoker/theme/global";
 import type { CoreOpts } from ".";
 
 export interface PromptContext<T> {

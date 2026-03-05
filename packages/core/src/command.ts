@@ -1,6 +1,7 @@
 import process from "node:process";
 
 import { gray, cyan, bold, type Theme } from "@convoker/theme";
+import { setTheme } from "@convoker/theme/global";
 import {
   ConvokerError,
   HelpAskedError,
@@ -336,20 +337,6 @@ export class Command<T extends Input = Input> {
       }
     }
 
-    let promptModule: { setTheme: (arg: Theme) => void } | null;
-    try {
-      promptModule = await import("../../prompt/dist/prompts");
-    } catch {
-      promptModule = null;
-    }
-
-    let logModule: { setTheme: (arg: Theme) => void } | null;
-    try {
-      logModule = await import("@convoker/log");
-    } catch {
-      logModule = null;
-    }
-
     let isVersion = false;
     let isHelp = false;
     for (let i = 0; i < argv.length; i++) {
@@ -407,8 +394,7 @@ export class Command<T extends Input = Input> {
         if (command.$children.has(arg) && !found) {
           command = command.$children.get(arg)!.command;
           if (command.$theme) {
-            promptModule?.setTheme(command.$theme);
-            logModule?.setTheme(command.$theme);
+            setTheme(command.$theme);
           }
         } else {
           found = true;

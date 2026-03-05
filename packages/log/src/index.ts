@@ -1,18 +1,9 @@
 import Stream from "node:stream";
 import process from "node:process";
-import { DEFAULT_THEME, type Theme } from "@convoker/theme";
+import type { Theme } from "@convoker/theme";
+import { getTheme, setTheme } from "@convoker/theme/global";
 import { merge, type DeepPartial } from "@convoker/theme/utils";
 import { WriteError } from "./error";
-
-let th: Theme = DEFAULT_THEME;
-
-/**
- * Sets the theme for logs.
- * @param theme The theme to set.
- */
-export function setTheme(theme: Theme) {
-  th = theme;
-}
 
 /**
  * Log configuration.
@@ -58,7 +49,7 @@ export function setConfig({
   ...cfg
 }: DeepPartial<Config> & { theme?: Theme }) {
   config = merge(DEFAULT_CONFIG, cfg);
-  th = theme ?? th;
+  if (theme) setTheme(theme);
 }
 
 /**
@@ -89,7 +80,7 @@ export function info(...msgs: any[]) {
  */
 export function warn(...msgs: any[]) {
   const str = format(msgs, "WARN");
-  if (!config.stderr.write(th.warning(str))) {
+  if (!config.stderr.write(str)) {
     throw new WriteError("stderr");
   }
 }
@@ -133,6 +124,8 @@ function format(msgs: any[], level: string): string {
       typeof m === "string" ? m : JSON.stringify(m, null, config.jsonSpace),
     )
     .join(" ");
+  const th = getTheme();
+
   switch (config.format) {
     case "json":
       return colorize(
@@ -157,6 +150,7 @@ function format(msgs: any[], level: string): string {
  * @returns An ANSI-wrapped string.
  */
 function colorize(str: string, level: string) {
+  const th = getTheme();
   switch (level) {
     case "TRACE":
       return th.secondary(str);

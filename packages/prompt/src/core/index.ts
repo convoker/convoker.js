@@ -41,7 +41,6 @@ export interface CoreOpts<T> {
   signal?: AbortSignal;
 }
 
-export * from "./theme";
 export * from "./static";
 export * from "./interactive";
 export * from "./error";

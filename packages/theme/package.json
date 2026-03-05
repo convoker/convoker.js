@@ -8,6 +8,11 @@
       "import": "./dist/index.mjs",
       "require": "./dist/index.cjs"
     },
+    "./global": {
+      "types": "./dist/global.d.mts",
+      "import": "./dist/global.mjs",
+      "require": "./dist/global.cjs"
+    },
     "./utils": {
       "types": "./dist/utils.d.mts",
       "import": "./dist/utils.mjs",

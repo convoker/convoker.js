@@ -57,6 +57,9 @@
     },
     "@convoker/theme": {
       "optional": true
+    },
+    "@convoker/input": {
+      "optional": true
     }
   }
 }

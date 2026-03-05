@@ -28,11 +28,11 @@
     "dist"
   ],
   "dependencies": {
-    "@convoker/core": "workspace:*",
-    "@convoker/input": "workspace:*",
-    "@convoker/log": "workspace:*",
-    "@convoker/prompt": "workspace:*",
-    "@convoker/theme": "workspace:*"
+    "@convoker/core": "workspace:^",
+    "@convoker/input": "workspace:^",
+    "@convoker/log": "workspace:^",
+    "@convoker/prompt": "workspace:^",
+    "@convoker/theme": "workspace:^"
   },
   "publishConfig": {
     "access": "public"

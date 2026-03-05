@@ -15,7 +15,7 @@
   "license": "MIT",
   "packageManager": "pnpm@10.30.3",
   "dependencies": {
-    "convoker": "workspace:*",
+    "convoker": "workspace:^",
     "zod": "^4.3.6"
   },
   "devDependencies": {

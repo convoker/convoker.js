@@ -24,8 +24,8 @@
     "prompt"
   ],
   "dependencies": {
-    "@convoker/input": "workspace:*",
-    "@convoker/theme": "workspace:*"
+    "@convoker/input": "workspace:^",
+    "@convoker/theme": "workspace:^"
   },
   "files": [
     "src",

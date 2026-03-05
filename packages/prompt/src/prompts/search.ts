@@ -1,3 +1,4 @@
+import { createInteractivePrompt } from "@/core";
 import type { SelectOption, SelectOpts } from "./select";
 
 /**
@@ -31,5 +32,58 @@ export interface SearchOpts<T, M extends boolean = false> extends SelectOpts<
 export default function search<T, M extends boolean = false>(
   opts: SearchOpts<T, M>,
 ): Promise<M extends true ? T[] : T> {
-  // TODO
+  if (opts.multiple) return searchMultiple(opts);
+  else return searchSingle(opts);
 }
+
+interface SearchSingleState {
+  /**
+   * Current search query typed by the user.
+   */
+  query: string;
+  /**
+   * Index of the currently highlighted item
+   * within the filtered results array.
+   */
+  cursor: number;
+  /**
+   * Indices of options that match the current query.
+   * These are indices into opts.options.
+   */
+  filtered: number[];
+}
+
+const searchSingle = createInteractivePrompt<
+  any,
+  SearchOpts<any, any>,
+  SearchSingleState
+>({
+  // TODO
+});
+
+interface SearchMultipleState {
+  /**
+   * Current search query.
+   */
+  query: string;
+  /**
+   * Cursor position within filtered results.
+   */
+  cursor: number;
+  /**
+   * Filtered option indices (same concept as single).
+   */
+  filtered: number[];
+  /**
+   * Selected option indices (original option indices).
+   */
+  selected: Set<number>;
+}
+
+const searchMultiple = createInteractivePrompt<
+  any,
+  SearchOpts<any, any>,
+  SearchMultipleState
+>({
+  // TODO
+});

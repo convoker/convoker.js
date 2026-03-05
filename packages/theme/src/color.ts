@@ -1,3 +1,5 @@
+import process from "node:process";
+
 /**
  * Detects if the runtime supports colored output.
  * @returns If the runtime supports colored output.

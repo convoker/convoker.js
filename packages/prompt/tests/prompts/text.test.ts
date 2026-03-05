@@ -1,4 +1,3 @@
-// text.test.ts
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { PassThrough } from "node:stream";
 import textPrompt from "@/prompts/text";

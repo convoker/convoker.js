@@ -158,12 +158,8 @@ const multiSelect = createInteractivePrompt<
       else if (key.name === "return") {
         const values = [...ctx.state.selected].map((i) => options[i]!.value);
 
-        try {
-          const validated = await ctx.validate(values);
-          done(validated);
-        } catch (err) {
-          void err; // TODO
-        }
+        const validated = await ctx.validate(values);
+        done(validated);
       }
     });
   },

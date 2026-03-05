@@ -14,13 +14,20 @@ function createMockStream() {
     setRawMode: vi.fn(),
     write: vi.fn(),
     pause: vi.fn(),
+    resume: vi.fn(),
     on: vi.fn((event: string, cb: Function) => {
       listeners[event] ??= [];
       listeners[event].push(cb);
     }),
-    removeAllListeners: vi.fn((event?: string) => {
-      if (event) listeners[event] = [];
-    }),
+    removeListener: vi.fn(
+      (event?: string, cb?: (...args: unknown[]) => unknown) => {
+        if (event)
+          listeners[event] = listeners[event]!.splice(
+            listeners[event]!.findIndex((a) => a === cb),
+            1,
+          );
+      },
+    ),
     emit(event: string, ...args: any[]) {
       listeners[event]?.forEach((fn) => fn(...args));
     },
@@ -37,25 +44,28 @@ describe("createInteractivePrompt", () => {
   });
 
   it("initializes state and renders", async () => {
-    const setup = vi.fn((ctx) => {
+    const render = vi.fn((ctx) => {
       ctx.done("done");
     });
 
-    const prompt = createInteractivePrompt(setup, () => ({ count: 0 }));
+    const prompt = createInteractivePrompt({
+      render,
+      initialState: () => ({ count: 0 }),
+    });
 
     await expect(prompt({ message: "test", input, output })).resolves.toBe(
       "done",
     );
 
-    expect(setup).toHaveBeenCalled();
-    expect(output.write).toHaveBeenCalledWith("\r\x1B[K");
+    expect(render).toHaveBeenCalled();
+    expect(output.write).toHaveBeenCalledWith("\n");
   });
 
   it("updates state with setState and re-renders", async () => {
     let renderCount = 0;
 
-    const prompt = createInteractivePrompt(
-      (ctx) => {
+    const prompt = createInteractivePrompt({
+      render: (ctx) => {
         renderCount++;
         if (ctx.state.count === 1) {
           ctx.done("ok");
@@ -63,8 +73,8 @@ describe("createInteractivePrompt", () => {
           ctx.setState((prev) => ({ count: prev.count + 1 }));
         }
       },
-      () => ({ count: 0 }),
-    );
+      initialState: () => ({ count: 0 }),
+    });
 
     await expect(prompt({ message: "test", input, output })).resolves.toBe(
       "ok",
@@ -73,16 +83,16 @@ describe("createInteractivePrompt", () => {
   });
 
   it("handles keypress events", async () => {
-    const prompt = createInteractivePrompt(
-      (ctx) => {
+    const prompt = createInteractivePrompt({
+      render: (ctx) => {
         ctx.onKeypress((key) => {
           if (key.name === "enter") {
             ctx.done("submitted");
           }
         });
       },
-      () => ({}),
-    );
+      initialState: () => ({}),
+    });
 
     const promise = prompt({ message: "test", input, output });
 
@@ -97,10 +107,10 @@ describe("createInteractivePrompt", () => {
   });
 
   it("restores raw mode on done", async () => {
-    const prompt = createInteractivePrompt(
-      (ctx) => ctx.done("x"),
-      () => ({}),
-    );
+    const prompt = createInteractivePrompt({
+      render: (ctx) => ctx.done("x"),
+      initialState: () => ({}),
+    });
 
     await prompt({ message: "test", input, output });
 

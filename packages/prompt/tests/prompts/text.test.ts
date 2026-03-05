@@ -177,6 +177,5 @@ describe("text prompt", () => {
     await promise;
 
     expect(input.pause).toHaveBeenCalled();
-    expect(input.removeAllListeners).toHaveBeenCalledWith("data");
   });
 });

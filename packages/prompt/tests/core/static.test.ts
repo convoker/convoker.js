@@ -16,12 +16,10 @@ function createMockStream() {
     setRawMode: vi.fn(),
     write: vi.fn(),
     pause: vi.fn(),
+    resume: vi.fn(),
     on: vi.fn((event: string, cb: Function) => {
       listeners[event] ??= [];
       listeners[event].push(cb);
-    }),
-    removeAllListeners: vi.fn((event?: string) => {
-      if (event) listeners[event] = [];
     }),
     emit(event: string, ...args: any[]) {
       listeners[event]?.forEach((fn) => fn(...args));

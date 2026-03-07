@@ -8,11 +8,11 @@ import {
   error,
   fatal,
   setConfig,
-  setTheme,
   DEFAULT_CONFIG,
   WriteError,
 } from "@/index";
-import { DEFAULT_THEME, type Theme } from "@convoker/theme";
+import { defineTheme } from "@convoker/theme";
+import { setTheme } from "@convoker/theme/global";
 
 /**
  * Helper to create a writable stream we can control and inspect
@@ -152,10 +152,9 @@ describe("log module", () => {
   });
 
   test("setTheme overrides the current theme", () => {
-    const customTheme: Theme = {
-      ...DEFAULT_THEME,
+    const customTheme = defineTheme({
       info: (s: string) => `INFO(${s})`,
-    };
+    });
 
     setTheme(customTheme);
     info("custom");

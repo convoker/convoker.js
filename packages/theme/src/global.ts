@@ -1,6 +1,6 @@
-import type { Theme } from "./theme";
+import { DEFAULT_THEME, type Theme } from "./theme";
 
-let theme: Theme;
+let theme: Theme = DEFAULT_THEME;
 
 export function setTheme(th: Theme) {
   theme = th;

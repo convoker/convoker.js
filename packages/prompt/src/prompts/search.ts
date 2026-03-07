@@ -1,4 +1,4 @@
-import { createInteractivePrompt } from "@/core";
+import { createInteractivePrompt, type InteractiveContext } from "@/core";
 import type { SelectOption, SelectOpts } from "./select";
 
 /**
@@ -38,7 +38,7 @@ export default function search<T, M extends boolean = false>(
   else return searchSingle(opts);
 }
 
-interface SearchSingleState {
+interface SearchBaseState {
   /**
    * Current search query typed by the user.
    */
@@ -54,6 +54,8 @@ interface SearchSingleState {
    */
   filtered: number[];
 }
+
+type SearchSingleState = SearchBaseState;
 
 const searchSingle = createInteractivePrompt<
   any,
@@ -72,14 +74,20 @@ const searchSingle = createInteractivePrompt<
     const { opts } = ctx;
 
     ctx.onKeypress(async (key) => {
-      const { state } = ctx;
-
       if (key.ctrl && key.name === "c") {
         return ctx.abort();
       }
 
       if (key.name === "return") {
-        const index = state.filtered[state.cursor];
+        const { state } = ctx;
+
+        let index = state.filtered[state.cursor];
+
+        while (index !== undefined && opts.options[index]?.disabled) {
+          state.cursor++;
+          index = state.filtered[state.cursor];
+        }
+
         if (index === undefined) return;
 
         const value = opts.options[index]!.value;
@@ -88,48 +96,7 @@ const searchSingle = createInteractivePrompt<
         return;
       }
 
-      if (key.name === "up") {
-        ctx.setState((s) => ({
-          ...s,
-          cursor: Math.max(0, s.cursor - 1),
-        }));
-        return;
-      }
-
-      if (key.name === "down") {
-        ctx.setState((s) => ({
-          ...s,
-          cursor: Math.min(s.filtered.length - 1, s.cursor + 1),
-        }));
-        return;
-      }
-
-      if (key.name === "backspace") {
-        ctx.setState((s) => {
-          const query = s.query.slice(0, -1);
-          const filtered = computeFiltered(query, opts);
-
-          return {
-            query,
-            filtered,
-            cursor: 0,
-          };
-        });
-        return;
-      }
-
-      if (key.name?.length === 1 && !key.ctrl && !key.meta) {
-        ctx.setState((s) => {
-          const query = s.query + key.name;
-          const filtered = computeFiltered(query, opts);
-
-          return {
-            query,
-            filtered,
-            cursor: 0,
-          };
-        });
-      }
+      if (handleSearchKeypress(ctx, key, opts)) return;
     });
   },
 
@@ -156,19 +123,7 @@ const searchSingle = createInteractivePrompt<
   },
 });
 
-interface SearchMultipleState {
-  /**
-   * Current search query.
-   */
-  query: string;
-  /**
-   * Cursor position within filtered results.
-   */
-  cursor: number;
-  /**
-   * Filtered option indices (same concept as single).
-   */
-  filtered: number[];
+interface SearchMultipleState extends SearchBaseState {
   /**
    * Selected option indices (original option indices).
    */
@@ -181,11 +136,14 @@ const searchMultiple = createInteractivePrompt<
   SearchMultipleState
 >({
   initialState(opts) {
+    const filtered = opts.options.map((_, i) => i);
+    const index = opts.initialIndex;
+
     return {
       query: "",
-      cursor: 0,
-      filtered: opts.options.map((_, i) => i),
-      selected: new Set(),
+      cursor: index ?? 0,
+      filtered,
+      selected: index !== undefined ? new Set([index]) : new Set(),
     };
   },
 
@@ -193,13 +151,13 @@ const searchMultiple = createInteractivePrompt<
     const { opts } = ctx;
 
     ctx.onKeypress(async (key) => {
-      const { state } = ctx;
-
       if (key.ctrl && key.name === "c") {
         return ctx.abort();
       }
 
       if (key.name === "return") {
+        const { state } = ctx;
+
         const values = [...state.selected].map((i) => opts.options[i]!.value);
 
         const validated = await ctx.validate(values);
@@ -208,7 +166,7 @@ const searchMultiple = createInteractivePrompt<
       }
 
       if (key.name === "space") {
-        const optionIndex = state.filtered[state.cursor];
+        const optionIndex = ctx.state.filtered[ctx.state.cursor];
         if (optionIndex === undefined) return;
 
         ctx.setState((s) => {
@@ -223,50 +181,7 @@ const searchMultiple = createInteractivePrompt<
         return;
       }
 
-      if (key.name === "up") {
-        ctx.setState((s) => ({
-          ...s,
-          cursor: Math.max(0, s.cursor - 1),
-        }));
-        return;
-      }
-
-      if (key.name === "down") {
-        ctx.setState((s) => ({
-          ...s,
-          cursor: Math.min(s.filtered.length - 1, s.cursor + 1),
-        }));
-        return;
-      }
-
-      if (key.name === "backspace") {
-        ctx.setState((s) => {
-          const query = s.query.slice(0, -1);
-          const filtered = computeFiltered(query, opts);
-
-          return {
-            ...s,
-            query,
-            filtered,
-            cursor: 0,
-          };
-        });
-        return;
-      }
-
-      if (key.name?.length === 1 && !key.ctrl && !key.meta) {
-        ctx.setState((s) => {
-          const query = s.query + key.name;
-          const filtered = computeFiltered(query, opts);
-
-          return {
-            ...s,
-            query,
-            filtered,
-            cursor: 0,
-          };
-        });
-      }
+      if (handleSearchKeypress(ctx as any, key, opts)) return;
     });
   },
 
@@ -309,10 +224,66 @@ function computeFiltered<T, Q>(
 
   return opts.options
     .map((opt, i) => ({ opt, i }))
-    .filter(({ opt }) =>
-      opts.filter
-        ? opts.filter(q as any, opt)
-        : String(opt.label).toLowerCase().includes(query.toLowerCase()),
+    .filter(
+      ({ opt }) =>
+        !opt.disabled &&
+        (opts.filter
+          ? opts.filter(q as any, opt)
+          : String(opt.label).toLowerCase().includes(query.toLowerCase())),
     )
     .map(({ i }) => i);
+}
+
+function handleSearchKeypress<T>(
+  ctx: InteractiveContext<any, any, SearchBaseState>,
+  key: any,
+  opts: SearchOpts<T, any, any>,
+) {
+  if (key.name === "up") {
+    ctx.setState((s) => ({
+      ...s,
+      cursor: Math.max(0, s.cursor - 1),
+    }));
+    return true;
+  }
+
+  if (key.name === "down") {
+    ctx.setState((s) => ({
+      ...s,
+      cursor: Math.min(s.filtered.length - 1, s.cursor + 1),
+    }));
+    return true;
+  }
+
+  if (key.name === "backspace") {
+    ctx.setState((s) => {
+      const query = s.query.slice(0, -1);
+      const filtered = computeFiltered(query, opts);
+
+      return {
+        ...s,
+        query,
+        filtered,
+        cursor: 0,
+      };
+    });
+    return true;
+  }
+
+  if (key.name?.length === 1 && !key.ctrl && !key.meta) {
+    ctx.setState((s) => {
+      const query = s.query + key.name;
+      const filtered = computeFiltered(query, opts);
+
+      return {
+        ...s,
+        query,
+        filtered,
+        cursor: 0,
+      };
+    });
+    return true;
+  }
+
+  return false;
 }

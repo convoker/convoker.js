@@ -1,0 +1,95 @@
+---
+title: Logging
+description: How to log in Convoker.
+order: 2
+---
+
+Logging prints whatever you wish to the console, in a structured format. Logging functions are mostly a drop-in replacement for `console` functions.
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+<Tabs syncKey="type">
+  <TabItem label="Individually">
+    <Tabs syncKey="pm">
+      <TabItem icon="npm" label="npm">
+        ```sh
+        npm install @convoker/log
+        ```
+      </TabItem>
+      <TabItem icon="bun" label="bun">
+        ```sh
+        bun add @convoker/log
+        ```
+      </TabItem>
+      <TabItem icon="pnpm" label="pnpm">
+        ```sh
+        pnpm add @convoker/log
+        ```
+      </TabItem>
+      <TabItem icon="seti:yarn" label="yarn">
+        ```sh
+        yarn add @convoker/log
+        ```
+      </TabItem>
+    </Tabs>
+
+  </TabItem>
+  <TabItem label="Bundle">
+    <Tabs syncKey="pm">
+      <TabItem icon="npm" label="npm">
+        ```sh
+        npm install convoker
+        ```
+      </TabItem>
+      <TabItem icon="bun" label="bun">
+        ```sh
+        bun add convoker
+        ```
+      </TabItem>
+      <TabItem icon="pnpm" label="pnpm">
+        ```sh
+        pnpm add convoker
+        ```
+      </TabItem>
+      <TabItem icon="seti:yarn" label="yarn">
+        ```sh
+        yarn add convoker
+        ```
+      </TabItem>
+    </Tabs>
+  </TabItem>
+</Tabs>
+
+## Usage:
+
+There are 5 log levels:
+
+1. ```ts
+   log.trace(...objs);
+   ```
+
+   A debug message. This can be configured to not be displayed if a verbose flag is not set, and by default prints as a lower contrast color.
+
+2. ```ts
+   log.info(...objs);
+   ```
+
+   An informational message. Prints to stdout.
+
+3. ```ts
+   log.warn(...objs);
+   ```
+
+   A warning message. Prints to stderr, and by default prints as yellow.
+
+4. ```ts
+   log.error(...objs);
+   ```
+
+   An error message. Prints to stderr, and by default prints as red.
+
+5. ```ts
+   log.fatal(...objs);
+   ```
+
+   A fatal error message. Prints to stderr, and by default prints as bold red and exits the program (configurable).

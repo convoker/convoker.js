@@ -1,0 +1,63 @@
+---
+title: Prompting
+description: How to prompt the user in Convoker.
+order: 3
+---
+
+Prompting the user is essential to many CLIs. It's the act of asking for user input in the terminal. Convoker provides several pre-built prompting utilities, and allows you to create your own if necessary.
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+<Tabs syncKey="type">
+  <TabItem label="Individually">
+    <Tabs syncKey="pm">
+      <TabItem icon="npm" label="npm">
+        ```sh
+        npm install @convoker/prompt
+        ```
+      </TabItem>
+      <TabItem icon="bun" label="bun">
+        ```sh
+        bun add @convoker/prompt
+        ```
+      </TabItem>
+      <TabItem icon="pnpm" label="pnpm">
+        ```sh
+        pnpm add @convoker/prompt
+        ```
+      </TabItem>
+      <TabItem icon="seti:yarn" label="yarn">
+        ```sh
+        yarn add @convoker/prompt
+        ```
+      </TabItem>
+    </Tabs>
+
+  </TabItem>
+  <TabItem label="Bundle">
+    <Tabs syncKey="pm">
+      <TabItem icon="npm" label="npm">
+        ```sh
+        npm install convoker
+        ```
+      </TabItem>
+      <TabItem icon="bun" label="bun">
+        ```sh
+        bun add convoker
+        ```
+      </TabItem>
+      <TabItem icon="pnpm" label="pnpm">
+        ```sh
+        pnpm add convoker
+        ```
+      </TabItem>
+      <TabItem icon="seti:yarn" label="yarn">
+        ```sh
+        yarn add convoker
+        ```
+      </TabItem>
+    </Tabs>
+  </TabItem>
+</Tabs>
+
+## Usage

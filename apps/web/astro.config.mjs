@@ -25,8 +25,8 @@ export default defineConfig({
           link: "/",
         },
         {
-          label: "Concepts",
-          autogenerate: { directory: "concepts" },
+          label: "Packages",
+          autogenerate: { directory: "packages" },
         },
         {
           label: "Guides",

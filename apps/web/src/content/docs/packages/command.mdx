@@ -1,0 +1,136 @@
+---
+title: Argument parsing
+description: How commands work in Convoker.
+---
+
+The `Command` class is the base of Convoker's argument parsing. It can be installed either from Convoker's bundle package or individually.
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+<Tabs syncKey="type">
+  <TabItem label="Individually">
+    <Tabs syncKey="pm">
+      <TabItem label="npm">
+        ```sh
+        npm install @convoker/core
+        ```
+      </TabItem>
+      <TabItem label="bun">
+        ```sh
+        bun add @convoker/core
+        ```
+      </TabItem>
+      <TabItem label="pnpm">
+        ```sh
+        pnpm add @convoker/core
+        ```
+      </TabItem>
+      <TabItem label="yarn">
+        ```sh
+        yarn add @convoker/core
+        ```
+      </TabItem>
+    </Tabs>
+
+  </TabItem>
+  <TabItem label="Bundle">
+    <Tabs syncKey="pm">
+      <TabItem label="npm">
+        ```sh
+        npm install convoker
+        ```
+      </TabItem>
+      <TabItem label="bun">
+        ```sh
+        bun add convoker
+        ```
+      </TabItem>
+      <TabItem label="pnpm">
+        ```sh
+        pnpm add convoker
+        ```
+      </TabItem>
+      <TabItem label="yarn">
+        ```sh
+        yarn add convoker
+        ```
+      </TabItem>
+    </Tabs>
+  </TabItem>
+</Tabs>
+
+Commands at the moment only supports POSIX-like argument parsing, but we plan to make this completely customizable in the future, to support Windows-like parsing and GNU-like parsing.
+
+```sh
+my-app \
+  sub-command \
+  sub-sub-command \
+  --long-option=value \
+  --long-bool-option \
+  -b \
+  -q=short-non-boolean-flag
+```
+
+Convoker also allows for middleware, functions that run before your action function is reached, in order, that have control flow.
+
+## Usage
+
+First, you create an instance of a `Command`, passing it a name to show on help screens. This will act as your root command, as the main entry point of your program. You can then further modify it using helper methods, like `description` or `version`, or `action` if you want your root command to do something.
+
+```ts
+import { Command } from "@convoker/core";
+
+const program = new Command("demo")
+  .description("A demo Convoker application.")
+  .version("1.0.0");
+```
+
+You can then add subcommands, using three main methods:
+
+1. Standard builder pattern, which only allows one subcommand per chain.
+
+   ```ts
+   program
+     .subCommand("name")
+     .use(middleware)
+     .input(inputObj)
+     .description("description")
+     .version("0.1.0")
+     .action(actionFn);
+   ```
+
+2. Callback function, which allows you to define multiple subcommands in the same chain.
+
+   ```ts
+   program.subCommand("name", (c) =>
+     c
+       .use(middleware)
+       .input(inputObj)
+       .description("description")
+       .version("0.1.0")
+       .action(actionFn),
+   );
+   ```
+
+3. Imported, which allows you to define subcommands in different files.
+
+   ```ts
+   const name = new Command("name")
+     .use(middleware)
+     .input(inputObj)
+     .description("description")
+     .version("0.1.0")
+     .action(actionFn);
+
+   program.add(name);
+   ```
+
+Then, you can execute it.
+
+```ts
+program.run();
+```
+
+`program.run()` simply returns a promise, so you can do anything you want before or after it. Convoker has a default help screen, which you can override by changing the default error handler and checking for `HelpAskedError`.
+
+Command action functions, error handlers, middlewares, any function, can take in an _input_. See [Input parsing](./input.mdx) for how to define inputs!

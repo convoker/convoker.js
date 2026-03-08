@@ -1,7 +1,6 @@
 import Stream from "node:stream";
 import process from "node:process";
-import type { Theme } from "@convoker/theme";
-import { getTheme, setTheme } from "@convoker/theme/global";
+import { getTheme } from "@convoker/theme/global";
 import { merge, type DeepPartial } from "@convoker/theme/utils";
 import { WriteError } from "./error";
 
@@ -44,12 +43,8 @@ let config: Config = DEFAULT_CONFIG;
  * Sets log configuration.
  * @param cfg The configuration, optionally including a theme.
  */
-export function setConfig({
-  theme,
-  ...cfg
-}: DeepPartial<Config> & { theme?: Theme }) {
+export function setConfig(cfg: DeepPartial<Config>) {
   config = merge(DEFAULT_CONFIG, cfg);
-  if (theme) setTheme(theme);
 }
 
 /**

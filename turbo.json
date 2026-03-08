@@ -16,8 +16,17 @@
       "cache": false
     },
     // apps
-    "start": {
-      "dependsOn": ["^prepare"]
+    "dev": {
+      "dependsOn": ["^prepare"],
+      "persistent": true,
+      "cache": false
+    },
+    "build": {
+      "dependsOn": ["^prepare", "build"],
+      "outputs": ["dist/**/*"]
+    },
+    "serve": {
+      "dependsOn": ["^prepare", "build"]
     }
   }
 }

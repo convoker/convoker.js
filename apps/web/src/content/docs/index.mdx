@@ -1,0 +1,37 @@
+---
+title: Convoker
+description: Documentation for Convoker, the TypeScript CLI framework.
+tableOfContents: false
+hero:
+  tagline: A simple, type-safe framework for building CLI applications in JavaScript.
+  image:
+    file: ../../assets/hero.png
+  actions:
+    - text: Quick Start
+      link: /guides/quick-start/
+      icon: right-arrow
+    - text: API reference
+      link: /api/command
+      icon: right-arrow
+      variant: secondary
+---
+
+import { Card, CardGrid } from "@astrojs/starlight/components";
+
+<CardGrid stagger>
+  <Card title="Argument Parsing">
+    The core of Convoker is type-safe argument parsing, allowing you to use any
+    [Standard Schema](https://standardschema.dev/) validator.
+  </Card>
+  <Card title="Logging">
+    Convoker comes with a built-in, fully customizable logging library.
+  </Card>
+  <Card title="Prompting">
+    Convoker gives an easy way to prompt the user for input, from simple
+    checkboxes to live search.
+  </Card>
+  <Card title="Theming">
+    Everything in Convoker is customizable, from how arguments are handled to
+    how your prompts look.
+  </Card>
+</CardGrid>

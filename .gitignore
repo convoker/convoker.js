@@ -11,3 +11,6 @@ dist/
 # env files
 .env*
 !.env.example
+
+# generated code
+apps/web/src/content/docs/api/

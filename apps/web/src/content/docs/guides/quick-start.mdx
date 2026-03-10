@@ -1,0 +1,93 @@
+---
+title: Quick start
+description: How to get started with Convoker.
+sidebar:
+  order: 0
+---
+
+Convoker provides several packages. The easiest way to install Convoker is through the _bundle package_, which comes with the following pieces:
+
+- `@convoker/core`: Argument parsing.
+  - `@convoker/input`: Input parsing for commands.
+- `@convoker/log`: Logging.
+- `@convoker/prompt`: Prompting.
+- `@convoker/theme`: Theming utilities.
+
+At the moment, these are the only pieces in Convoker, but in the future, you will have more extras. These extras will need to be installed separately.
+
+You can also install them individually if you prefer.
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+{/* prettier-ignore */}
+<Tabs syncKey="type">
+  <TabItem label="Bundle">
+    <Tabs syncKey="pm">
+      <TabItem icon="pnpm" label="pnpm">
+        ```sh
+        pnpm add convoker
+        ```
+      </TabItem>
+      <TabItem icon="npm" label="npm">
+        ```sh
+        npm add convoker
+        ```
+      </TabItem>
+      <TabItem icon="bun" label="Bun">
+        ```sh
+        bun add convoker
+        ```
+      </TabItem>
+      <TabItem icon="seti:yarn" label="Yarn">
+        ```sh
+        yarn add convoker
+        ```
+      </TabItem>
+    </Tabs>
+  </TabItem>
+  <TabItem label="Individual">
+    <Tabs syncKey="pm">
+      <TabItem icon="pnpm" label="pnpm">
+        ```sh
+        pnpm add @convoker/core @convoker/theme @convoker/prompt @convoker/log
+        ```
+      </TabItem>
+      <TabItem icon="npm" label="npm">
+        ```sh
+        npm add @convoker/core @convoker/theme @convoker/prompt @convoker/log
+        ```
+      </TabItem>
+      <TabItem icon="bun" label="Bun">
+        ```sh
+        bun add @convoker/core @convoker/theme @convoker/prompt @convoker/log
+        ```
+      </TabItem>
+      <TabItem icon="seti:yarn" label="Yarn">
+        ```sh
+        yarn add @convoker/core @convoker/theme @convoker/prompt @convoker/log
+        ```
+      </TabItem>
+    </Tabs>
+  </TabItem>
+</Tabs>
+{/* prettier-ignore-end */}
+
+You can then paste this code to make a Hello World application:
+
+```js title="index.js"
+import { Command, log } from "convoker"; // or:
+// import { Command } from "@convoker/core";
+// import * as log from "@convoker/log";
+
+const program = new Command();
+
+program.subCommand("greet", (c) =>
+  c.action(() => {
+    log.info("Hello, World!");
+  }),
+);
+
+program.run().catch(log.fatal);
+```
+
+You can then run `node index.js greet`, and it'll work! Check out our [Command Guide](/guides/command) for how to create your own subcommands, define command metadata, define middleware and customize argument parsing.

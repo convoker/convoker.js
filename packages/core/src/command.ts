@@ -199,7 +199,7 @@ export class Command<T extends Input = Input> {
 
   /**
    * Sets the input for this command.
-   * @param version The input.
+   * @param input The input.
    * @returns this
    */
   input<TInput extends Input>(input: TInput): Command<TInput> {
@@ -303,7 +303,7 @@ export class Command<T extends Input = Input> {
    * @param argv The arguments to parse.
    * @returns A parse result.
    */
-  async parse(argv: string[]): Promise<ParseResult<T>> {
+  async parse(argv = process.argv.slice(2)): Promise<ParseResult<T>> {
     // eslint-disable-next-line -- alias to this is necessary to go through the tree
     let command: Command<any> = this;
     let found = false;
@@ -644,8 +644,8 @@ export class Command<T extends Input = Input> {
    * @param argv The arguments to run the command with. Defaults to your runtime's `argv` equivalent.
    * @returns this
    */
-  async run(argv?: string[]): Promise<this> {
-    const result = await this.parse(argv ?? process.argv.slice(2));
+  async run(argv = process.argv.slice(2)): Promise<this> {
+    const result = await this.parse(argv);
     if (result.isHelp) {
       result.command.handleErrors([new HelpAskedError(result.command)]);
       return this;

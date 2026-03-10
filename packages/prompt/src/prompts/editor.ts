@@ -13,6 +13,9 @@ export interface EditorOpts extends CoreOpts<string> {
    * If the input is required for continuing or not.
    */
   required?: boolean;
+  /**
+   * If editing should be inline. Omit or set to `false` to open the default editor.
+   */
   inline?: boolean;
 }
 

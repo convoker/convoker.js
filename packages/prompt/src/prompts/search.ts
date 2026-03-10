@@ -17,6 +17,10 @@ export interface SearchOpts<
    * Minimum length for a query string.
    */
   minQueryLength?: number;
+  /**
+   * Transforms a query before running filter functions.
+   * @param query The query.
+   */
   transformQuery?(query: string): Q;
   /**
    * Filters a single option.

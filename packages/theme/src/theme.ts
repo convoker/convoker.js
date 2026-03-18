@@ -76,6 +76,10 @@ export interface Theme {
      * Information message symbol.
      */
     info?: string;
+    /**
+     * A cursor symbol, used in things like search and select.
+     */
+    cursor: string;
   };
 
   /**
@@ -98,6 +102,48 @@ export interface Theme {
      */
     underline?(a: string): string;
   };
+
+  prompt?: {
+    /**
+     * Prefix before the message (e.g. "?")
+     */
+    prefix?(symbol: string): string;
+
+    /**
+     * Styles the main message text
+     */
+    message?(text: string): string;
+
+    /**
+     * Styles user input
+     */
+    input?(text: string): string;
+
+    /**
+     * Styles placeholder text
+     */
+    placeholder?(text: string): string;
+
+    /**
+     * Styles default value hint
+     */
+    default?(text: string): string;
+
+    /**
+     * Highlighted (active) option
+     */
+    highlight?(text: string): string;
+
+    /**
+     * Selected option (multi-select)
+     */
+    selected?(text: string): string;
+
+    /**
+     * Dim/disabled option
+     */
+    inactive?(text: string): string;
+  };
 }
 
 /**
@@ -116,6 +162,7 @@ export const DEFAULT_THEME: Theme = {
     error: "✖",
     fatal: "✖",
     warning: "⚠",
+    cursor: "❯",
   },
 
   styles: {

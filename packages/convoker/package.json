@@ -1,7 +1,7 @@
 {
   "name": "convoker",
   "type": "module",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "A simple, type-safe CLI framework.",
   "exports": {
     ".": {
@@ -39,5 +39,5 @@
   },
   "author": "sprucepad",
   "license": "MIT",
-  "packageManager": "pnpm@10.30.3"
+  "packageManager": "pnpm@10.32.1"
 }

@@ -25,7 +25,7 @@ export interface EditorOpts extends CoreOpts<string> {
  * @returns The contents of the file.
  */
 export default createPrompt<string, EditorOpts>(async (ctx) => {
-  const { done, error, validate, abort } = ctx;
+  const { done, error, validate, abort, theme, output } = ctx;
 
   const tmp = path.join(os.tmpdir(), `tmp-${Date.now()}.txt`);
   await fs.writeFile(tmp, ctx.opts.default ?? "", "utf-8");
@@ -33,10 +33,14 @@ export default createPrompt<string, EditorOpts>(async (ctx) => {
   const cleanupFile = async () => {
     try {
       await fs.unlink(tmp);
-    } catch {
-      // ignore
+    } catch (e) {
+      void e;
     }
   };
+
+  const prefix = theme.prompt?.prefix?.("?") ?? theme.primary("?");
+
+  const message = theme.prompt?.message?.(ctx.opts.message) ?? ctx.opts.message;
 
   try {
     let contents: string;
@@ -50,7 +54,12 @@ export default createPrompt<string, EditorOpts>(async (ctx) => {
 
       const lines: string[] = [];
 
-      ctx.output.write("Enter your text. Submit empty line to finish.\n\n");
+      output.write(
+        `${prefix} ${message}\n` +
+          (theme.prompt?.placeholder?.("(Enter text, empty line to finish)") ??
+            theme.secondary("(Enter text, empty line to finish)")) +
+          "\n\n",
+      );
 
       for await (const line of rl) {
         if (!line.trim()) break;
@@ -65,6 +74,10 @@ export default createPrompt<string, EditorOpts>(async (ctx) => {
         process.env.VISUAL ||
         process.env.EDITOR ||
         (process.platform === "win32" ? "notepad" : "vi");
+
+      output.write(
+        `${prefix} ${message} ` + theme.secondary(`(opening ${editor})`) + "\n",
+      );
 
       await new Promise<void>((resolve, reject) => {
         const child = spawn(editor, [tmp], {

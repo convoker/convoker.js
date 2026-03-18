@@ -1,5 +1,10 @@
 import { createInteractivePrompt, type InteractiveContext } from "@/core";
 import type { SelectOption, SelectOpts } from "./select";
+import {
+  renderEmpty,
+  renderOption,
+  renderSelectHeader,
+} from "./_shared/select";
 
 /**
  * Options for search input.
@@ -105,25 +110,32 @@ const searchSingle = createInteractivePrompt<
   },
 
   render(ctx) {
-    const { output, opts, state } = ctx;
+    const { state, opts } = ctx;
 
-    const placeholder = opts.placeholder ?? opts.message;
-    const query = state.query || placeholder;
+    const query =
+      state.query ||
+      (opts.placeholder
+        ? (ctx.theme.prompt?.placeholder?.(opts.placeholder) ??
+          opts.placeholder)
+        : opts.message);
 
-    output.write(`? ${query}\n`);
+    renderSelectHeader(ctx, query);
 
     if (state.filtered.length === 0) {
-      output.write("  No results\n");
+      renderEmpty(ctx);
       return;
     }
 
-    for (let i = 0; i < state.filtered.length; i++) {
-      const optionIndex = state.filtered[i]!;
-      const option = opts.options[optionIndex]!;
+    state.filtered.forEach((optionIndex, i) => {
+      const opt = opts.options[optionIndex]!;
 
-      const cursor = i === state.cursor ? "❯" : " ";
-      output.write(`${cursor} ${option.label}\n`);
-    }
+      renderOption(ctx, {
+        label: opt.label,
+        hint: opt.hint,
+        disabled: opt.disabled,
+        isCursor: i === state.cursor,
+      });
+    });
   },
 });
 
@@ -190,29 +202,40 @@ const searchMultiple = createInteractivePrompt<
   },
 
   render(ctx) {
-    const { output, opts, state } = ctx;
+    const { state, opts } = ctx;
 
-    const placeholder = opts.placeholder ?? opts.message;
-    const query = state.query || placeholder;
+    const query =
+      state.query ||
+      (opts.placeholder
+        ? (ctx.theme.prompt?.placeholder?.(opts.placeholder) ??
+          opts.placeholder)
+        : opts.message);
 
-    output.write(`? ${query}\n`);
+    renderSelectHeader(ctx, query);
 
     if (state.filtered.length === 0) {
-      output.write("  No results\n");
+      renderEmpty(ctx);
       return;
     }
 
-    for (let i = 0; i < state.filtered.length; i++) {
-      const optionIndex = state.filtered[i]!;
-      const option = opts.options[optionIndex]!;
+    state.filtered.forEach((optionIndex, i) => {
+      const opt = opts.options[optionIndex]!;
 
-      const cursor = i === state.cursor ? "❯" : " ";
-      const checked = state.selected.has(optionIndex) ? "[x]" : "[ ]";
+      renderOption(ctx, {
+        label: opt.label,
+        hint: opt.hint,
+        disabled: opt.disabled,
+        isCursor: i === state.cursor,
+        isSelected: state.selected.has(optionIndex),
+        multiple: true,
+      });
+    });
 
-      output.write(`${cursor} ${checked} ${option.label}\n`);
-    }
+    const help =
+      ctx.theme.prompt?.inactive?.("Press space to select, enter to confirm") ??
+      ctx.theme.secondary("Press space to select, enter to confirm");
 
-    output.write("\nPress space to select, enter to confirm\n");
+    ctx.output.write("\n" + help + "\n");
   },
 });
 

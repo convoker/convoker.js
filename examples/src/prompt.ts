@@ -76,4 +76,11 @@ export const promptExample = new Command("prompt")
     // Opens the system editor.
     const editor = await prompt.editor({ message: "Type something!" });
     console.log(editor);
+
+    // Opens an inline editor.
+    const editorInline = await prompt.editor({
+      message: "Type something (inline)!",
+      inline: true,
+    });
+    console.log(editorInline);
   });

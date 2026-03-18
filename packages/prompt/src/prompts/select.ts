@@ -1,4 +1,5 @@
 import { createInteractivePrompt, type CoreOpts } from "@/core";
+import { renderOption, renderSelectHeader } from "./_shared/select";
 
 /**
  * An option for select input.
@@ -99,15 +100,17 @@ const singleSelect = createInteractivePrompt<
   },
 
   render(ctx) {
-    const { output, opts, state } = ctx;
+    const { opts, state } = ctx;
 
-    output.write(`${opts.message ?? "Select an option"}\n`);
+    renderSelectHeader(ctx);
 
     opts.options.forEach((opt, i) => {
-      const cursor = i === state.cursor ? ">" : " ";
-      const disabled = opt.disabled ? " (disabled)" : "";
-
-      output.write(`${cursor} ${opt.label}${disabled}\n`);
+      renderOption(ctx, {
+        label: opt.label,
+        hint: opt.hint,
+        disabled: opt.disabled,
+        isCursor: i === state.cursor,
+      });
     });
   },
 });
@@ -165,21 +168,19 @@ const multiSelect = createInteractivePrompt<
   },
 
   render(ctx) {
-    const { output, opts, state } = ctx;
-    const { options } = opts;
+    const { opts, state } = ctx;
 
-    // Render
-    output.write(`${opts.message ?? "Select options"}\n`);
+    renderSelectHeader(ctx);
 
-    options.forEach((opt, i) => {
-      const isCursor = i === state.cursor;
-      const isSelected = state.selected.has(i);
-
-      const cursor = isCursor ? ">" : " ";
-      const checkbox = isSelected ? "[x]" : "[ ]";
-      const disabled = opt.disabled ? " (disabled)" : "";
-
-      output.write(`${cursor} ${checkbox} ${opt.label}${disabled}\n`);
+    opts.options.forEach((opt, i) => {
+      renderOption(ctx, {
+        label: opt.label,
+        hint: opt.hint,
+        disabled: opt.disabled,
+        isCursor: i === state.cursor,
+        isSelected: state.selected.has(i),
+        multiple: true,
+      });
     });
   },
 

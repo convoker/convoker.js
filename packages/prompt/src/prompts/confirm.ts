@@ -20,7 +20,7 @@ export interface ConfirmOpts extends CoreOpts<boolean> {
  * @returns If the user chose the "Yes" option.
  */
 export default createPrompt<boolean, ConfirmOpts>(async (ctx) => {
-  const { output, input, opts, done, abort, validate } = ctx;
+  const { output, input, opts, done, abort, validate, theme } = ctx;
 
   const yesLabel = opts.yesLabel ?? "Yes";
   const noLabel = opts.noLabel ?? "No";
@@ -31,14 +31,26 @@ export default createPrompt<boolean, ConfirmOpts>(async (ctx) => {
   const defaultValue =
     opts.default === undefined ? undefined : Boolean(opts.default);
 
-  const renderOptions = () => {
-    const y = defaultValue === true ? yesKey.toUpperCase() : yesKey;
-    const n = defaultValue === false ? noKey.toUpperCase() : noKey;
+  const prefix = theme.prompt?.prefix?.("?") ?? theme.primary("?");
 
-    return `(${y}/${n})`;
+  const message = theme.prompt?.message?.(opts.message) ?? opts.message;
+
+  const formatOption = (label: string, key: string, active: boolean) => {
+    const display = active ? key.toUpperCase() : key.toLowerCase();
+    const text = `${display}`;
+
+    return active
+      ? (theme.prompt?.input?.(text) ?? text)
+      : theme.secondary(text);
   };
 
-  output.write(`${opts.message} ${renderOptions()} `);
+  const options = `(${formatOption(yesLabel, yesKey, defaultValue === true)}/${formatOption(
+    noLabel,
+    noKey,
+    defaultValue === false,
+  )})`;
+
+  output.write(`${prefix} ${message} ${options} `);
 
   input.setEncoding("utf8");
   input.resume();
@@ -60,7 +72,7 @@ export default createPrompt<boolean, ConfirmOpts>(async (ctx) => {
     } else if (key === noKey || key === "n") {
       value = false;
     } else {
-      return; // ignore unknown input
+      return;
     }
 
     try {

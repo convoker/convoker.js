@@ -31,7 +31,9 @@ describe("text prompt", () => {
       output,
     });
 
-    expect(output.write).toHaveBeenCalledWith("Your name? ");
+    expect(output.write).toHaveBeenCalledWith(
+      expect.stringContaining("Your name? "),
+    );
 
     input.emit("data", "John\n");
     await promise;

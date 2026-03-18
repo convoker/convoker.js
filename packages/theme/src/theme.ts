@@ -98,6 +98,33 @@ export interface Theme {
      */
     underline?(a: string): string;
   };
+
+  prompt?: {
+    /**
+     * Prefix before the message (e.g. "?")
+     */
+    prefix?(symbol: string): string;
+
+    /**
+     * Styles the main message text
+     */
+    message?(text: string): string;
+
+    /**
+     * Styles user input
+     */
+    input?(text: string): string;
+
+    /**
+     * Styles placeholder text
+     */
+    placeholder?(text: string): string;
+
+    /**
+     * Styles default value hint
+     */
+    default?(text: string): string;
+  };
 }
 
 /**

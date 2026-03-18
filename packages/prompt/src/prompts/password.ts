@@ -1,17 +1,12 @@
 import { createInteractivePrompt, PromptValidationError } from "@/core";
 import type { TextOpts } from "./text";
+import { renderTextlikeLine } from "./_shared/textlike";
 
 /**
  * Options for password input.
  */
 export interface PasswordOpts extends TextOpts {
-  /**
-   * The mask for the password input.
-   */
   mask?: string;
-  /**
-   * If the user should be asked to confirm the password, by typing it again.
-   */
   confirm?: boolean;
 }
 
@@ -21,11 +16,6 @@ interface PasswordState {
   first?: string;
 }
 
-/**
- * Prompts the user for a password.
- * @param opts Options for password input.
- * @returns The password.
- */
 export default createInteractivePrompt<string, PasswordOpts, PasswordState>({
   setup(ctx) {
     const { onKeypress, setState, done, validate, opts } = ctx;
@@ -98,15 +88,20 @@ export default createInteractivePrompt<string, PasswordOpts, PasswordState>({
   render(ctx) {
     const { output, opts, state } = ctx;
 
-    const mask = opts.mask ?? "*";
+    const maskChar = opts.mask ?? "*";
+    const masked = maskChar.repeat(state.value.length);
 
-    const message = state.confirming
-      ? `${opts.message} (confirm)`
-      : opts.message;
+    // Clear line before rendering (important for interactive UX)
+    output.write("\r");
 
-    const visible = mask.repeat(state.value.length);
-
-    output.write(`${message} ${visible}`);
+    renderTextlikeLine(ctx, {
+      message: opts.message,
+      placeholder: opts.placeholder,
+      default: opts.default,
+      value: state.value,
+      masked,
+      confirming: state.confirming,
+    });
   },
 
   initialState: () => ({

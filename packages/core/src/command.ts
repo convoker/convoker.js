@@ -17,6 +17,7 @@ import {
   type InferInput,
   type Input,
 } from "@convoker/input";
+import { unix, type Parser } from "./parsers";
 
 /**
  * What the command is an alias for.
@@ -35,11 +36,15 @@ export interface CommandAlias<T extends Input = Input> {
 /**
  * The result of the `Command.parse` function.
  */
-export interface ParseResult<T extends Input> {
+export interface ValidatedParseResult<T extends Input> {
   /**
    * A pointer to the command to run.
    */
   command: Command<T>;
+  /**
+   * A pointer to all collected middlewares.
+   */
+  middlewares: MiddlewareFn<T>[];
   /**
    * The input to pass into the command.
    */
@@ -90,15 +95,15 @@ export type Builder = (c: Command<any>) => Command<any> | void;
 /**
  * An input map entry.
  */
-interface MapEntry {
+interface InputMapEntry {
   /**
    * The key of the map entry.
    */
-  key: string;
+  inputKey: string;
   /**
    * The value of the map entry.
    */
-  value: Option<any, any, any> | Positional<any, any, any>;
+  inputOption: Option<any, any, any> | Positional<any, any, any>;
 }
 
 /**
@@ -153,6 +158,10 @@ export class Command<T extends Input = Input> {
    * The error handler of this command.
    */
   $errorFn: ErrorFn<T> | undefined = undefined;
+  /**
+   * The argument parser to use.
+   */
+  $parser: Parser = unix();
 
   /**
    * Creates a new command.
@@ -301,183 +310,109 @@ export class Command<T extends Input = Input> {
   /**
    * Parses a set of command-line arguments.
    * @param argv The arguments to parse.
-   * @returns A parse result.
+   * @returns A validated parse result.
    */
-  async parse(argv = process.argv.slice(2)): Promise<ParseResult<T>> {
-    // eslint-disable-next-line -- alias to this is necessary to go through the tree
+  async parse(argv = process.argv.slice(2)): Promise<ValidatedParseResult<T>> {
+    const { positional, flags } = await this.$parser.parse(argv);
+
+    // eslint-disable-next-line -- alias of this is necessary to traverse through the tree
     let command: Command<any> = this;
-    let found = false;
+    const middlewares: MiddlewareFn[] = [...command.$middlewares];
+    let args = positional;
+    while (args.length > 0 && command.$children.has(args[0]!)) {
+      command = command.$children.get(args[0]!)!.command;
+      middlewares.push(...command.$middlewares);
+      args = args.slice(1);
+    }
+
+    if (command.$theme) setTheme(command.$theme);
+
+    const map = this.buildInputMap();
     const input: Record<string, unknown> = {};
-
-    const args: string[] = [];
-    const opts: Record<string, string> = {};
-
     const errors: ConvokerError[] = [];
-    const map = command.buildInputMap();
-
-    function getOption(key: string, isSpecial?: boolean) {
-      const entry = map.get(key);
-      if (!entry) {
-        if (!command.$allowUnknownOptions && !isSpecial)
-          errors.push(new UnknownOptionError(command, key));
-        return null;
-      }
-      return entry.value as Option<any, any, any>;
-    }
-
-    function setOption(
-      key: string,
-      option: Option<any, any, any>,
-      value?: string,
-    ) {
-      if (option.$kind === "boolean") {
-        opts[key] = "true";
-      } else if (value !== undefined) {
-        opts[key] = value;
-      }
-    }
-
-    let isVersion = false;
     let isHelp = false;
-    for (let i = 0; i < argv.length; i++) {
-      const arg = argv[i]!;
-      if (arg.startsWith("--")) {
-        // --long[=value] or --long [value]
-        const [key, value] = arg.slice(2).split("=") as [string, string];
+    let isVersion = false;
 
-        let isSpecial = false;
-        if (key === "help") {
-          isHelp = true;
-          isSpecial = true;
-        } else if (key === "version") {
-          isVersion = true;
-          isSpecial = true;
+    // Set option input values
+    for (const flag in flags) {
+      if (flag === "h" || flag === "help") {
+        isHelp = true;
+      } else if (flag === "V" || flag === "version") {
+        isVersion = true;
+      }
+
+      if (!map.has(flag)) {
+        if (!command.$allowUnknownOptions)
+          errors.push(new UnknownOptionError(command, flag));
+      }
+      const { inputKey, inputOption } = map.get(flag)!;
+      input[inputKey] =
+        inputOption.$kind === "boolean"
+          ? true
+          : await convert(inputOption.$kind, flags.get(flag) as string);
+    }
+
+    // Set positional input values
+    for (let i = 0; i < args.length; i++) {
+      if (!map.has(i)) {
+        if (!command.$allowSurpassArgLimit)
+          errors.push(new TooManyArgumentsError(command));
+        break;
+      }
+
+      const { inputKey, inputOption } = map.get(i)!;
+      if (inputOption.$list) {
+        const values: string[] = [];
+        while (i++ < args.length) {
+          values.push(args[i]!);
         }
-
-        const option = getOption(key, isSpecial);
-        if (option) {
-          if (value === undefined)
-            setOption(
-              key,
-              option,
-              option.$kind === "boolean" ? undefined : argv[++i],
-            );
-          else setOption(key, option, value);
-        }
-      } else if (arg.startsWith("-")) {
-        // -abc or -k[=value] or -k [value]
-        const [shortKeys, value] = arg.slice(1).split("=") as [string, string];
-        const chars = shortKeys.split("");
-        let usedValue: string | undefined = value;
-
-        for (const char of chars) {
-          let isSpecial = false;
-          if (char === "h") {
-            isHelp = true;
-            isSpecial = true;
-          } else if (char === "V") {
-            isVersion = true;
-            isSpecial = true;
-          }
-
-          const option = getOption(char, isSpecial);
-          if (!option) continue;
-
-          if (option.$kind !== "boolean" && usedValue === undefined) {
-            usedValue = argv[++i];
-          }
-          setOption(char, option, usedValue);
-          usedValue = undefined; // only first consumes
-        }
+        input[inputKey] = await convert(inputOption.$kind, values);
       } else {
-        // positional
-        if (command.$children.has(arg) && !found) {
-          command = command.$children.get(arg)!.command;
-          if (command.$theme) {
-            setTheme(command.$theme);
-          }
-        } else {
-          found = true;
-          args.push(arg);
-        }
+        input[inputKey] =
+          inputOption.$kind === "boolean"
+            ? true
+            : await convert(inputOption.$kind, args[i]!);
       }
     }
 
-    // Apply user values, defaults, or enforce required
-    let index = 0;
-    for (const key in command.$input) {
-      const entry = command.$input[key];
-      let rawValue: string | string[] | undefined;
-
-      if (entry instanceof Positional) {
-        if (entry.$list) {
-          rawValue = args.slice(index);
-          index = args.length;
-          if (
-            !command.$allowSurpassArgLimit &&
-            rawValue.length === 0 &&
-            entry.$required
-          ) {
-            errors.push(new MissingRequiredArgumentError(command, key, entry));
-          }
-        } else {
-          rawValue = args[index++];
-          if (rawValue === undefined && entry.$required) {
-            errors.push(new MissingRequiredArgumentError(command, key, entry));
-          }
-        }
-      } else {
-        for (const name of entry.$names) {
-          if (opts[name] !== undefined) {
-            rawValue = entry.$list
-              ? opts[name].split(entry.$separator ?? ",")
-              : opts[name];
-            break;
-          }
+    // Apply defaults and enforce required
+    for (const inputKey in command.$input) {
+      const inputValue = command.$input[inputKey];
+      if (!input[inputKey]) {
+        if (inputValue.$default) input[inputKey] = inputValue.$default;
+        else if (inputValue.$required) {
+          const ErrorClass =
+            inputValue instanceof Positional
+              ? MissingRequiredArgumentError
+              : MissingRequiredOptionError;
+          errors.push(new ErrorClass(command, inputKey, inputValue));
         }
       }
-
-      if (rawValue !== undefined) {
-        input[key] = await convert(entry.$kind, rawValue);
-      } else if (entry.$default !== undefined) {
-        input[key] = entry.$default;
-      } else if (entry.$required) {
-        if (entry instanceof Option) {
-          errors.push(new MissingRequiredOptionError(command, key, entry));
-        } else {
-          errors.push(new MissingRequiredArgumentError(command, key, entry));
-        }
-      }
-    }
-
-    // Check for too many arguments
-    const remainingArgs = args.slice(index);
-    if (!command.$allowSurpassArgLimit && remainingArgs.length > 0) {
-      errors.push(new TooManyArgumentsError(command));
     }
 
     return {
-      input: input as InferInput<T>,
       command,
+      middlewares,
       errors,
-      isVersion,
+      input: input as InferInput<T>,
       isHelp,
+      isVersion,
     };
   }
 
   private buildInputMap(
     ignoreParentMap?: boolean,
-  ): Map<string | number, MapEntry> {
-    const map = new Map<string | number, MapEntry>();
+  ): Map<string | number, InputMapEntry> {
+    const map = new Map<string | number, InputMapEntry>();
 
     let i = 0;
     for (const key in this.$input) {
       const value = this.$input[key]!;
       if (value instanceof Positional) {
-        map.set(i++, { value, key });
+        map.set(i++, { inputOption: value, inputKey: key });
       } else {
         for (const name of value.$names) {
-          map.set(name, { value, key });
+          map.set(name, { inputOption: value, inputKey: key });
         }
       }
     }
@@ -665,9 +600,8 @@ export class Command<T extends Input = Input> {
           result.input,
         );
       } else {
-        const middlewares = collectMiddlewares(result.command);
-        if (middlewares.length > 0) {
-          const runner = compose(middlewares);
+        if (result.middlewares.length > 0) {
+          const runner = compose(result.middlewares);
           // finalNext calls the command action with the same input
           await runner(result.input, async () => {
             await result.command.$fn?.(result.input);
@@ -686,18 +620,6 @@ export class Command<T extends Input = Input> {
     }
     return this;
   }
-}
-
-function collectMiddlewares(cmd: Command<any>) {
-  const middlewares: MiddlewareFn<any>[] = [];
-  let current: Command<any> | undefined = cmd;
-  while (current) {
-    if (current.$middlewares.length) {
-      middlewares.unshift(...current.$middlewares);
-    }
-    current = current.$parent;
-  }
-  return middlewares;
 }
 
 function compose(mws: MiddlewareFn<any>[]) {

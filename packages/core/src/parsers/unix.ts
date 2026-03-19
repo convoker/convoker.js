@@ -42,9 +42,19 @@ export function unix(preset = gnu()): Parser {
           else names = [arg.slice(1)];
 
           let value: string | undefined;
+
+          const firstName = preset.joinShortFlags
+            ? arg.slice(1)[0]!
+            : arg.slice(1);
+
+          const isBoolean =
+            inputMap.get(firstName)?.inputOption.$kind === "boolean";
+
           for (const separator of preset.valueSeparators) {
             if (separator === " ") {
-              value = argv[++i]!;
+              if (!isBoolean) {
+                value = argv[++i]!;
+              }
               break;
             }
 

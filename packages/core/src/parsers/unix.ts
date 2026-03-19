@@ -85,7 +85,7 @@ export interface UnixPreset {
 
 export function gnu(): UnixPreset {
   return {
-    valueSeparators: [" ", "="],
+    valueSeparators: ["=", " "],
     joinShortFlags: true,
     allowLongFlags: true,
   };

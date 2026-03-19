@@ -161,7 +161,7 @@ export class Command<T extends Input = Input> {
   /**
    * The argument parser to use.
    */
-  $parser: Parser | undefined;
+  $parser: Parser = unix();
 
   /**
    * Creates a new command.
@@ -313,7 +313,7 @@ export class Command<T extends Input = Input> {
    * @returns A validated parse result.
    */
   async parse(argv = process.argv.slice(2)): Promise<ValidatedParseResult<T>> {
-    this.$parser ??= unix();
+    const map = this.buildInputMap();
 
     // eslint-disable-next-line -- alias of this is necessary to traverse through the tree
     let command: Command<any> = this;
@@ -330,8 +330,17 @@ export class Command<T extends Input = Input> {
     }
 
     if (command.$theme) setTheme(command.$theme);
-    const map = command.buildInputMap();
-    const { flags, positional } = await this.$parser.parse(args, map);
+    const parseResult = await command.$parser.parse(args, map);
+
+    // Parse remaining (to handle `command --flag sub sub2`)
+    while (
+      parseResult.positional.length > 0 &&
+      command.$children.has(parseResult.positional[0]!)
+    ) {
+      command = command.$children.get(parseResult.positional[0]!)!.command;
+      middlewares.push(...command.$middlewares);
+      parseResult.positional = parseResult.positional.slice(1);
+    }
 
     const input: Record<string, unknown> = {};
     const errors: ConvokerError[] = [];
@@ -339,7 +348,7 @@ export class Command<T extends Input = Input> {
     let isVersion = false;
 
     // Set option input values
-    for (const [flag, flagValue] of flags) {
+    for (const [flag, flagValue] of parseResult.flags) {
       if (flag === "h" || flag === "help") {
         isHelp = true;
       } else if (flag === "V" || flag === "version") {
@@ -359,7 +368,7 @@ export class Command<T extends Input = Input> {
     }
 
     // Set positional input values
-    for (let i = 0; i < positional.length; i++) {
+    for (let i = 0; i < parseResult.positional.length; i++) {
       if (!map.has(i)) {
         if (!command.$allowSurpassArgLimit)
           errors.push(new TooManyArgumentsError(command));
@@ -369,15 +378,15 @@ export class Command<T extends Input = Input> {
       const { inputKey, inputOption } = map.get(i)!;
       if (inputOption.$list) {
         const values: string[] = [];
-        while (i++ < positional.length) {
-          values.push(positional[i]!);
+        while (i++ < parseResult.positional.length) {
+          values.push(parseResult.positional[i]!);
         }
         input[inputKey] = await convert(inputOption.$kind, values);
       } else {
         input[inputKey] =
           inputOption.$kind === "boolean"
             ? true
-            : await convert(inputOption.$kind, positional[i]!);
+            : await convert(inputOption.$kind, parseResult.positional[i]!);
       }
     }
 
@@ -406,11 +415,8 @@ export class Command<T extends Input = Input> {
     };
   }
 
-  private buildInputMap(
-    ignoreParentMap?: boolean,
-  ): Map<string | number, InputMapEntry> {
+  public buildInputMap() {
     const map = new Map<string | number, InputMapEntry>();
-
     let i = 0;
     for (const key in this.$input) {
       const value = this.$input[key]!;
@@ -423,14 +429,8 @@ export class Command<T extends Input = Input> {
       }
     }
 
-    if (!ignoreParentMap) {
-      for (const [key, entry] of this.$parent?.buildInputMap() ?? []) {
-        map.set(key, entry);
-      }
-    }
-
     for (const [, { command }] of this.$children) {
-      for (const [key, entry] of command.buildInputMap(true)) {
+      for (const [key, entry] of command.buildInputMap()) {
         map.set(key, entry);
       }
     }
@@ -507,7 +507,12 @@ export class Command<T extends Input = Input> {
       );
       for (const { entry } of opts) {
         const names = entry.$names
-          .map((n) => (n.length === 1 ? `-${n}` : `--${n}`))
+          .map((n) => {
+            if (n.length > 1 && this.$parser.capabilities.longFlags)
+              return `${this.$parser.capabilities.longFlags.prefix}${n}`;
+            else if (this.$parser.capabilities.shortFlags)
+              return `${this.$parser.capabilities.shortFlags.prefix}${n}`;
+          })
           .join(", ");
         const line = `  ${cyan(pad(names, longest + 4))}${gray(entry.$description ?? "")}`;
         console.log(line);

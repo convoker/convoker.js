@@ -13,8 +13,8 @@ export function windows(): Parser {
 
     capabilities: {
       subCommands: true,
-      longFlags: { prefix: "/", valueSeparators: ":" },
-      shortFlags: { prefix: "/", valueSeparators: ":" },
+      longFlags: { prefix: "/", valueSeparators: [":"] },
+      shortFlags: { prefix: "/", valueSeparators: [":"] },
     },
   };
 }

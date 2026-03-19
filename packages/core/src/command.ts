@@ -95,7 +95,7 @@ export type Builder = (c: Command<any>) => Command<any> | void;
 /**
  * An input map entry.
  */
-interface InputMapEntry {
+export interface InputMapEntry {
   /**
    * The key of the map entry.
    */
@@ -161,7 +161,7 @@ export class Command<T extends Input = Input> {
   /**
    * The argument parser to use.
    */
-  $parser: Parser = unix();
+  $parser: Parser | undefined;
 
   /**
    * Creates a new command.
@@ -313,28 +313,33 @@ export class Command<T extends Input = Input> {
    * @returns A validated parse result.
    */
   async parse(argv = process.argv.slice(2)): Promise<ValidatedParseResult<T>> {
-    const { positional, flags } = await this.$parser.parse(argv);
+    this.$parser ??= unix();
 
     // eslint-disable-next-line -- alias of this is necessary to traverse through the tree
     let command: Command<any> = this;
     const middlewares: MiddlewareFn[] = [...command.$middlewares];
-    let args = positional;
+    let args = argv;
     while (args.length > 0 && command.$children.has(args[0]!)) {
+      if (!this.$parser.capabilities.subCommands)
+        throw new Error(
+          "Subcommands aren't allowed in the parser you're using.",
+        );
       command = command.$children.get(args[0]!)!.command;
       middlewares.push(...command.$middlewares);
       args = args.slice(1);
     }
 
     if (command.$theme) setTheme(command.$theme);
+    const map = command.buildInputMap();
+    const { flags, positional } = await this.$parser.parse(args, map);
 
-    const map = this.buildInputMap();
     const input: Record<string, unknown> = {};
     const errors: ConvokerError[] = [];
     let isHelp = false;
     let isVersion = false;
 
     // Set option input values
-    for (const flag in flags) {
+    for (const [flag, flagValue] of flags) {
       if (flag === "h" || flag === "help") {
         isHelp = true;
       } else if (flag === "V" || flag === "version") {
@@ -344,16 +349,17 @@ export class Command<T extends Input = Input> {
       if (!map.has(flag)) {
         if (!command.$allowUnknownOptions)
           errors.push(new UnknownOptionError(command, flag));
+        continue;
       }
       const { inputKey, inputOption } = map.get(flag)!;
       input[inputKey] =
         inputOption.$kind === "boolean"
           ? true
-          : await convert(inputOption.$kind, flags.get(flag) as string);
+          : await convert(inputOption.$kind, flagValue as string);
     }
 
     // Set positional input values
-    for (let i = 0; i < args.length; i++) {
+    for (let i = 0; i < positional.length; i++) {
       if (!map.has(i)) {
         if (!command.$allowSurpassArgLimit)
           errors.push(new TooManyArgumentsError(command));
@@ -363,15 +369,15 @@ export class Command<T extends Input = Input> {
       const { inputKey, inputOption } = map.get(i)!;
       if (inputOption.$list) {
         const values: string[] = [];
-        while (i++ < args.length) {
-          values.push(args[i]!);
+        while (i++ < positional.length) {
+          values.push(positional[i]!);
         }
         input[inputKey] = await convert(inputOption.$kind, values);
       } else {
         input[inputKey] =
           inputOption.$kind === "boolean"
             ? true
-            : await convert(inputOption.$kind, args[i]!);
+            : await convert(inputOption.$kind, positional[i]!);
       }
     }
 
